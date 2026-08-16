@@ -1,0 +1,4 @@
+interface:
+  display_name: "JobRadar 求职投递"
+  short_description: "在 Codex 内搜索 JobRadar 并经逐岗位确认后安全投递"
+  default_prompt: "使用 $apply-jobradar 根据我的真实材料搜索 JobRadar 岗位，并在提交前逐岗位征求确认。"
