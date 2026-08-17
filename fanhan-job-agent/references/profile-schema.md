@@ -20,6 +20,7 @@
     "remote_preference": "unknown",
     "relocation_preference": "unknown",
     "available_from": "unknown",
+    "work_authorization": "unknown",
     "salary_expectation": "unknown",
     "target_industries": [],
     "company_preferences": []
@@ -48,6 +49,7 @@
 - `employment_type`：`internship`、`full_time`、`either`、`unknown`
 - `remote_preference`：`accept`、`reject`、`conditional`、`unknown`
 - `relocation_preference`：`accept`、`reject`、`conditional`、`unknown`
+- `work_authorization`：`unknown`，或候选人明确拥有的工作许可字符串数组。
 - `education.status` / `core_experiences.status`：`known` 或 `unknown`。明确确认“没有”也属于 `known`，`items` 可以为空。
 
 ## 证据
