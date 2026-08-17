@@ -1,11 +1,11 @@
 ---
 name: apply-jobradar
-description: 在 Codex 内置浏览器中根据用户真实材料搜索 JobRadar 岗位、解释匹配、协助填写申请，并在逐岗位明确确认后真实提交和记录结果。适用于用户要求从 JobRadar 找工作、验证 JobRadar 代投链路或投递一个 JobRadar 来源岗位；不得切换系统默认浏览器、绕过验证码、猜测申请事实或在缺少当前岗位最终确认时提交。
+description: 在 Codex 内置浏览器中探索 JobRadar 岗位来源，并复用个人数据确认、逐岗位最终确认和最小结果记录。适用于验证 JobRadar 发现链路或投递一个 JobRadar 来源岗位；JobRadar 不是 V1 首个稳定直接投递平台，不得切换系统默认浏览器、绕过验证码、猜测申请事实或在缺少当前岗位最终确认时提交。
 ---
 
-# JobRadar 求职投递
+# JobRadar 求职投递安全骨架
 
-V1 只跑通 Codex + JobRadar 的单岗位闭环。开始前读取 [V1 contract](references/v1-contract.md)；执行验收时再读取 [test record template](references/test-record-template.md)。
+Issue #25 已把 JobRadar 定位为岗位发现源，而不是首个稳定直接投递平台。本 Skill 暂时只保留可复用的确认门和最小日志；Bonjour 侧边栏预演完成前，不得宣称 JobRadar 单岗位闭环已跑通。开始前读取 [V1 contract](references/v1-contract.md)；执行验收时再读取 [test record template](references/test-record-template.md)。
 
 ## 工作流
 

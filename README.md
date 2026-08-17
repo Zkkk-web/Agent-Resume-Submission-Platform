@@ -1,9 +1,11 @@
 # Agent Resume Submission Platform — V1
 
-V1 由一个泛函求职主 Skill 和一个外部网站探索适配器组成：
+V1 由一个泛函求职主 Skill 和一个外部网站安全探索骨架组成：
 
 - `fanhan-job-agent`：整理真实材料、读取泛函岗位，并在候选人明确授权后通过工作台公开业务 API 幂等入库。
-- `apply-jobradar`：在 Codex 内置浏览器中探索 JobRadar 外部投递，并保留个人数据确认与逐岗位最终确认。
+- `apply-jobradar`：保留个人数据确认、逐岗位最终确认与最小本地记录；它是探索期遗留名称，不代表 JobRadar 已成为首个稳定投递平台。
+
+Issue #25 的只读探测已把 Bonjour 选为首个直接投递候选，Watcha 为第二顺位，JobRadar 只作岗位发现源。详细证据见 [外部招聘网站可行性探测](docs/external-site-feasibility-issue-08.md)。在 Codex 侧边栏完成 Bonjour 真实预演前，不重命名或复制适配器代码。
 
 V1 不包含候选人平台账号、积分付费、三个外部网站稳定适配或验证码绕过。WorkBuddy 当前只验收主 Skill 可安装、触发并进入材料采集。
 
@@ -39,4 +41,4 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_
 
 ## 工作台接入
 
-泛函主链路的接口、评分和缺口以 [工作台接入审计](docs/workbench-integration-audit.md) 为准。当前 JobRadar 安全骨架可以继续复用；候选人自助入库与本人匹配结果回读已经通过工作台公开接口完成，开源 Skill 不携带服务密钥。首次入库飞书通知仍需在工作台补齐。
+泛函主链路的接口、评分和缺口以 [工作台接入审计](docs/workbench-integration-audit.md) 为准。当前外部网站安全骨架可以继续复用；候选人自助入库、本人匹配结果回读和首次内部飞书通知已经通过工作台公开接口与通知队列完成，开源 Skill 不携带服务密钥。
