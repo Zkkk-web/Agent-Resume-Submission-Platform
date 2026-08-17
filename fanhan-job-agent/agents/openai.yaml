@@ -1,4 +1,4 @@
 interface:
   display_name: "泛函求职 Agent"
-  short_description: "整理真实材料，匹配泛函岗位，并在授权后安全入库"
-  default_prompt: "使用 $fanhan-job-agent 读取我的真实求职材料。先说明隐私边界，只追问必要缺项；未经我明确授权，不要把资料上传给泛函或任何招聘网站。"
+  short_description: "先建立职业资产，再匹配岗位并生成专用简历"
+  default_prompt: "使用 $fanhan-job-agent 帮我找工作。先调用 $职业资产 读取材料并建立基础档案；选岗后给出针对性建议和岗位专用简历。未经我明确授权，不要上传材料或提交申请。"

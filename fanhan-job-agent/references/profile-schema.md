@@ -9,6 +9,15 @@
     "path": "/path/to/resume.pdf",
     "sha256": "unknown"
   },
+  "identity": {
+    "name": "unknown"
+  },
+  "career_document": {
+    "path": "职业经历.md"
+  },
+  "application_resume": {
+    "path": "unknown"
+  },
   "contact": {
     "email": "unknown",
     "phone_or_wechat": "unknown"
@@ -59,6 +68,7 @@
 ```json
 {
   "evidence": {
+    "identity.name": ["resume.pdf 第 1 页"],
     "contact.email": ["resume.pdf 第 1 页"],
     "intent.preferred_locations": ["候选人于本轮明确回答：上海、杭州"],
     "education": ["resume.pdf 教育经历"],
@@ -66,6 +76,10 @@
   }
 }
 ```
+
+`career_document.path` 必须指向 `$职业资产` 根据当前材料生成或更新的非空 `职业经历.md`。`profile.json` 只是机器可读索引，不能代替职业主档。
+
+`application_resume.path` 只在用户确认当前岗位专用 PDF 后填写；它不能指向原始简历或仅做格式转换的 PDF。工作台和外部申请只使用该文件。
 
 只记录来源位置或候选人确认，不复制大段简历正文。当前城市不是期望地点证据；模型推断不是远程或搬迁意愿证据。
 

@@ -53,9 +53,9 @@ def save_private(path: Path, value: dict) -> None:
 
 
 def resume_path(profile: dict, profile_path: Path) -> Path:
-    value = str(profile.get("resume", {}).get("path") or "").strip()
+    value = str(profile.get("application_resume", {}).get("path") or "").strip()
     if not value:
-        raise ValueError("profile.resume.path 不能为空")
+        raise ValueError("profile.application_resume.path 不能为空；禁止上传原始简历")
     path = Path(value).expanduser()
     return (path if path.is_absolute() else profile_path.parent / path).resolve()
 
@@ -299,12 +299,21 @@ def self_test() -> None:
         resume = root / "resume.pdf"
         resume.write_bytes(b"%PDF-test")
         profile_path = root / ".fanhan-job-agent" / "profile.json"
+        career_document = root / ".fanhan-job-agent" / "职业经历.md"
+        career_document.parent.mkdir(parents=True, exist_ok=True)
+        career_document.write_text("# 职业经历\n", encoding="utf-8")
+        tailored_resume = root / ".fanhan-job-agent" / "outbox" / "张三-Example-AI产品经理-20260818-v1.pdf"
+        tailored_resume.parent.mkdir(parents=True, exist_ok=True)
+        tailored_resume.write_bytes(b"%PDF-tailored")
         job_path = root / "job.json"
         introduction_path = root / "intro.txt"
         state_path = root / ".fanhan-job-agent" / "submission.json"
         profile = {
             "schema_version": "fanhan-career-profile-v1",
             "resume": {"path": str(resume)},
+            "application_resume": {"path": str(tailored_resume)},
+            "identity": {"name": "张三"},
+            "career_document": {"path": str(career_document)},
             "contact": {"email": "candidate@example.com", "phone_or_wechat": "unknown"},
             "intent": {
                 "target_roles": ["AI 产品经理"], "employment_type": "full_time",
@@ -314,6 +323,7 @@ def self_test() -> None:
             "education": {"status": "known", "items": []},
             "core_experiences": {"status": "known", "items": []},
             "evidence": {
+                "identity.name": ["简历第 1 页"],
                 "contact.email": ["简历第 1 页"], "intent.target_roles": ["候选人明确回答"],
                 "intent.employment_type": ["候选人明确回答"],
                 "intent.preferred_locations": ["候选人明确回答"],
@@ -329,6 +339,7 @@ def self_test() -> None:
         introduction_path.write_text("我有真实 AI 产品交付经验。", encoding="utf-8")
         preview = prepare(profile_path, job_path, introduction_path, state_path, "https://workbench.example.com")
         assert preview["network_writes"] == 0
+        assert preview["resume"]["name"] == tailored_resume.name
         fake = FakeClient()
         try:
             submit(profile_path, state_path, fake)
