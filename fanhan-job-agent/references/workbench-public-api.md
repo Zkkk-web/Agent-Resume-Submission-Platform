@@ -36,6 +36,7 @@
 - `completed` 表示候选人材料已完成工作台处理；资料待补充时可以没有岗位匹配。
 - 只有资料可匹配时才生成 `pending` 匹配审核，绝不自动批准或发送给企业。
 - `match` 非空时只包含本次候选人 × 岗位的脱敏结果：`score`、`algorithm_version`、`reason`、`hard_filter_summary`、`keywords`、`evidence` 和 `risks`。它是工作台保存的真实结果，只能在候选人授权提交后回读，不得在 Skill 中重算。
-- 当前公开状态接口仍不返回首次飞书通知回执；该能力完成前不得自行补造通知结果。
+- `notification` 只返回脱敏的内部首次入库通知状态：`pending`、`sent`、`manual` 或 `unknown`，以及尝试次数和是否需要人工处理。它不包含飞书群 ID、消息 ID 或内部错误。
+- `manual` 和 `unknown` 都表示泛函内部正在处理；Skill 只向用户说明状态，不得更换会话标识、重传简历或新建第二次申请。
 
 公开岗位当前稳定字段是 `id`、`company`、`title`、`summary`、`description`、`category`、`city`、`work_type`、`salary` 和 `required_skills`。`work_mode`、`relocation_required`、`required_start_date` 和 `work_authorization` 缺失时必须标记未知，不能推断为符合。
