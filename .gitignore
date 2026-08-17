@@ -1,5 +1,2 @@
-.DS_Store
-__pycache__/
-*.pyc
+.fanhan-job-agent/
 .jobradar/
-*.local.json

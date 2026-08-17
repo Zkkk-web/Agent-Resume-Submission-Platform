@@ -1,32 +1,37 @@
 # Agent Resume Submission Platform — V1
 
-V1 是一个可安装到 Codex 的 JobRadar 求职投递 Skill：读取用户明确提供的材料和偏好，在 Codex 内置浏览器中找岗位、协助填写，并在每个岗位最终提交前请求确认。
+V1 由一个泛函求职主 Skill 和一个外部网站探索适配器组成：
 
-V1 不包含 WorkBuddy、云端账号、数据库、积分付费、真人推荐或系统默认浏览器自动化。
+- `fanhan-job-agent`：整理真实材料、读取泛函岗位，并在候选人明确授权后通过工作台公开业务 API 幂等入库。
+- `apply-jobradar`：在 Codex 内置浏览器中探索 JobRadar 外部投递，并保留个人数据确认与逐岗位最终确认。
+
+V1 不包含候选人平台账号、积分付费、三个外部网站稳定适配或验证码绕过。WorkBuddy 当前只验收主 Skill 可安装、触发并进入材料采集。
 
 ## 安装
 
 ```bash
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R apply-jobradar "${CODEX_HOME:-$HOME/.codex}/skills/apply-jobradar"
+cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
 ```
 
 安装后在 Codex 中说：
 
 ```text
-使用 $apply-jobradar，根据我的简历和求职偏好，从 JobRadar 找合适岗位。提交任何申请前都要让我逐个确认。
+使用 $fanhan-job-agent 读取我的真实求职材料。先说明隐私边界；未经我明确授权，不要上传给泛函或任何招聘网站。
 ```
 
-最小投递记录默认写入当前工作区 `.jobradar/applications.jsonl`，只保存岗位、状态和成功证据等非敏感字段。
+主 Skill 的本地生成物写入当前工作区 `.fanhan-job-agent/`；JobRadar 最小投递记录写入 `.jobradar/applications.jsonl`。两者都不得保存简历正文、联系方式、凭据或表单答案。
 
 ## 本地验证
 
 ```bash
 python3 apply-jobradar/scripts/application_log.py self-test
 python3 apply-jobradar/scripts/confirmation_gate.py self-test
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
 ```
 
-真实验收还需要测试者提供可用于申请的真实材料，并在个人数据发送、登录/验证码和最终提交时亲自确认。
+真实验收还需要测试者提供可用于申请的真实材料，并在泛函入库、外部个人数据发送、登录/验证码和最终提交时亲自确认。
 
 ## 工作台接入
 
