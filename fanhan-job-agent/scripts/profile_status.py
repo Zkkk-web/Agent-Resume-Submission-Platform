@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import tempfile
@@ -19,6 +20,8 @@ ENUMS = {
 }
 QUESTIONS = {
     "resume.path": "请提供原始简历文件路径。",
+    "identity.name": "你的姓名应该怎样写在申请材料上？",
+    "career_document.path": "我先根据你的材料整理一份可长期复用的职业经历主档。",
     "contact": "请提供一个有效邮箱，或电话／微信。",
     "contact.evidence": "请确认联系方式来自简历还是你刚才的明确回答。",
     "intent.target_roles": "你希望投递哪些岗位方向？",
@@ -30,6 +33,14 @@ QUESTIONS = {
     "education": "简历中的教育信息是否已完整提取？若没有教育经历，请明确确认。",
     "core_experiences": "简历中的核心工作、实习或项目经历是否已完整提取？若没有，请明确确认。",
 }
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def known(value: object) -> bool:
@@ -57,6 +68,16 @@ def resume_exists(profile: dict, base_dir: Path) -> bool:
     return path.is_file()
 
 
+def local_file_exists(profile: dict, section: str, base_dir: Path) -> bool:
+    value = profile.get(section, {}).get("path")
+    if not known(value):
+        return False
+    path = Path(str(value)).expanduser()
+    if not path.is_absolute():
+        path = base_dir / path
+    return path.is_file() and path.stat().st_size > 0
+
+
 def valid_contact(profile: dict) -> bool:
     contact = profile.get("contact", {})
     email = str(contact.get("email") or "").strip().lower()
@@ -82,6 +103,10 @@ def evaluate(profile: dict, base_dir: Path) -> dict:
     missing = []
     if not resume_exists(profile, base_dir):
         missing.append("resume.path")
+    if not known(profile.get("identity", {}).get("name")) or not evidence(profile, "identity.name"):
+        missing.append("identity.name")
+    if not local_file_exists(profile, "career_document", base_dir):
+        missing.append("career_document.path")
     if not valid_contact(profile):
         missing.append("contact")
     elif not contact_has_evidence(profile):
@@ -127,9 +152,13 @@ def self_test() -> None:
     with tempfile.TemporaryDirectory() as directory:
         resume = Path(directory) / "resume.pdf"
         resume.write_bytes(b"%PDF-test")
+        career_document = Path(directory) / "职业经历.md"
+        career_document.write_text("# 职业经历\n", encoding="utf-8")
         complete = {
             "schema_version": "fanhan-career-profile-v1",
             "resume": {"path": str(resume)},
+            "identity": {"name": "张三"},
+            "career_document": {"path": str(career_document)},
             "contact": {"email": "candidate@example.com", "phone_or_wechat": "unknown"},
             "intent": {
                 "target_roles": ["AI 产品经理"],
@@ -142,6 +171,7 @@ def self_test() -> None:
             "education": {"status": "known", "items": []},
             "core_experiences": {"status": "known", "items": []},
             "evidence": {
+                "identity.name": ["简历第 1 页"],
                 "contact.email": ["简历第 1 页"],
                 "intent.target_roles": ["候选人明确回答"],
                 "intent.employment_type": ["候选人明确回答"],
@@ -188,6 +218,7 @@ def self_test() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("profile", nargs="?", help="职业档案 JSON 路径")
+    parser.add_argument("--output", help="可选的状态 JSON 输出路径")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -197,7 +228,16 @@ def main() -> None:
         parser.error("请提供职业档案 JSON 路径")
     path = Path(args.profile).expanduser().resolve()
     profile = json.loads(path.read_text(encoding="utf-8"))
-    print(json.dumps(evaluate(profile, path.parent), ensure_ascii=False, indent=2))
+    result = evaluate(profile, path.parent)
+    result.update(schema_version="fanhan-profile-status-v1", profile_sha256=sha256(path))
+    rendered = json.dumps(result, ensure_ascii=False, indent=2)
+    if args.output:
+        output = Path(args.output).expanduser().resolve()
+        if ".fanhan-job-agent" not in output.parts:
+            raise ValueError("状态文件必须写入 .fanhan-job-agent/")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write and query the V1 non-sensitive JobRadar application log."""
+"""Write and query the V1 non-sensitive external application log."""
 
 import argparse
 import json
@@ -38,8 +38,8 @@ def validate_record(record):
         raise ValueError("all text fields must be strings")
     if not isinstance(record["user_confirmed"], bool):
         raise ValueError("user_confirmed must be boolean")
-    if record["source"] != "JobRadar" or not record["company"].strip() or not record["job_title"].strip():
-        raise ValueError("source, company, and job title must identify a JobRadar role")
+    if not record["source"].strip() or not record["company"].strip() or not record["job_title"].strip():
+        raise ValueError("source, company, and job title are required")
     if not record["job_url"] and not record["application_url"]:
         raise ValueError("a job or application URL is required")
     if record["status"] not in STATUSES:
@@ -94,7 +94,7 @@ def is_duplicate(records, job_url, application_url):
 def make_record(args):
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "source": "JobRadar",
+        "source": args.source,
         "company": args.company,
         "job_title": args.job_title,
         "job_url": normalize_url(args.job_url),
@@ -119,9 +119,12 @@ def self_test():
         append_record(path, base)
         records = read_records(path)
         assert is_duplicate(records, "https://jobradar.cc/jobs/1?utm_source=test", "")
-        declined = dict(base, status="user_declined", user_confirmed=False, success_evidence="", reason="user_declined")
+        declined = dict(
+            base, source="Bonjour", status="user_declined",
+            user_confirmed=False, success_evidence="", reason="user_declined",
+        )
         append_record(path, declined)
-        assert len(read_records(path)) == 2
+        assert read_records(path)[1]["source"] == "Bonjour"
         try:
             validate_record(dict(base, user_confirmed=False))
         except ValueError:
@@ -133,9 +136,10 @@ def self_test():
 
 def build_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=Path, default=Path(".jobradar/applications.jsonl"))
+    parser.add_argument("--path", type=Path, default=Path(".fanhan-job-agent/external-applications.jsonl"))
     subparsers = parser.add_subparsers(dest="command", required=True)
     append = subparsers.add_parser("append")
+    append.add_argument("--source", required=True)
     for flag in ("company", "job-title", "job-url", "application-url", "status", "user-confirmed"):
         append.add_argument(f"--{flag}", required=True)
     append.add_argument("--success-evidence", default="")

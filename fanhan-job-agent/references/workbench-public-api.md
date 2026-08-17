@@ -12,7 +12,7 @@
 
 1. `GET /healthz`：未 ready 时停止写入。
 2. `GET /api/public/jobs`：读取脱敏后的真实开放岗位。
-3. `POST /api/public/candidate-files?name=<文件名>`：请求体为 PDF 原始字节，`Content-Type: application/pdf`，最大 10 MB。
+3. `POST /api/public/candidate-files?name=<文件名>`：请求体必须是用户确认过的当前岗位专用 PDF，取自 `profile.application_resume.path`；禁止上传 `profile.resume.path` 指向的原始简历。`Content-Type: application/pdf`，最大 10 MB。
 4. `POST /api/public/candidate-applications`：JSON 字段如下。
 
 ```json

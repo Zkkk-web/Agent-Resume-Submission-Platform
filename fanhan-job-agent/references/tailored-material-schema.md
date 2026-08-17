@@ -1,14 +1,16 @@
 # JD 定制材料契约
 
-定制过程使用 `.fanhan-job-agent/tailored-proposal.json`，最终成稿必须写为 `.fanhan-job-agent/` 下的新 Markdown 文件。原始简历永远只读。
+定制过程使用 `.fanhan-job-agent/tailored-proposal.json`。先生成带变更依据的 Markdown 审核稿，再生成 `.fanhan-job-agent/outbox/` 下可编辑、可打印为 PDF 的 HTML；原始简历永远只读。
 
 ```json
 {
   "schema_version": "fanhan-tailored-material-v1",
   "job": {
-    "id": "工作台真实岗位 ID",
+    "id": "工作台岗位 ID 或外部岗位稳定链接",
+    "company": "目标公司",
     "title": "岗位名称"
   },
+  "artifact_stem": "候选人姓名-目标公司-目标岗位-YYYYMMDD-v1",
   "sections": [
     {
       "heading": "相关经历",
@@ -28,6 +30,14 @@
   ]
 }
 ```
+
+## 完整性与文件名
+
+- `sections` 必须构成一份完整可投递简历，不能只包含零散修改建议。
+- 修改建议先在聊天中向候选人展示，再进入成稿。
+- `artifact_stem` 必须由职业档案中的候选人姓名和当前岗位的公司、职位生成，格式为 `姓名-目标公司-目标岗位-YYYYMMDD-vN`。
+- 原简历文件名中的公司不能继承到新版本，除非它就是当前目标公司。
+- HTML 页面右上角提供“导出 PDF”；用户检查或编辑后，按同一 `artifact_stem` 保存 PDF。
 
 ## 变更类型
 
