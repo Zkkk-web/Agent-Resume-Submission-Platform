@@ -5,7 +5,7 @@ description: 整理候选人的真实求职材料，读取泛函开放岗位，�
 
 # 泛函求职 Agent
 
-首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md)。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
+首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md) 和 [本地职业档案契约](references/profile-schema.md)。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
 
 ## 启动
 
@@ -14,6 +14,14 @@ description: 整理候选人的真实求职材料，读取泛函开放岗位，�
 3. 核验文件真实存在且可读。当前工作台公开入口只接收 PDF；非 PDF 可以先在本地整理，但不得声称已能上传。
 4. 只追问当前步骤必需的缺项。未提供的信息写为“未知”，不得用当前城市推断期望地点、远程意愿或搬迁意愿。
 5. 保留原始文件，不覆盖原简历。生成物写入当前工作区 `.fanhan-job-agent/`；不要把该目录、候选人材料或本地会话标识提交到 Git。
+
+## 档案与追问
+
+1. 把提取结果写入 `.fanhan-job-agent/profile.json`。未知字段必须使用 `unknown` 或空数组，非未知字段必须记录材料位置或候选人明确回答作为证据。
+2. 运行本 Skill 目录内的 `scripts/profile_status.py`：`python3 <skill-root>/scripts/profile_status.py .fanhan-job-agent/profile.json`。脚本只输出状态和字段代码，不输出简历正文或联系方式。
+3. `profile_status=待补充` 时，每轮最多询问返回的前三个 `next_questions`；得到回答后更新档案、证据并重新检查。不要询问薪资、行业、公司偏好、作品集或 GitHub，除非当前具体岗位需要。
+4. “待补充／可匹配”只表示资料完整度，不等于工作台“待审核／通过／不通过”。不得把两组状态互相覆盖。
+5. 授权发生前，`ingest_ready=false` 是正常结果，不要为了让校验通过而代替用户确认。
 
 ## 泛函岗位流程
 
@@ -24,7 +32,7 @@ description: 整理候选人的真实求职材料，读取泛函开放岗位，�
 
    > 我同意将上述求职资料提交给泛函，用于候选人档案管理、岗位匹配和招聘团队人工审核。资料将保存于泛函招聘工作台，并可能通过泛函内部飞书招聘话题群通知招聘团队。我可以申请停止推荐或删除档案。
 
-5. 只有用户对本次上传清晰同意时，才上传 PDF 并创建候选人申请；请求必须携带 `consent_confirmed: true`。拒绝、含糊答复或沉默都不得调用任何材料写接口。
+5. 只有用户对本次上传清晰同意时，才把授权时间、材料摘要版本和幂等标识写入本地档案，并再次运行完整度脚本。`ingest_ready=true` 后才能上传 PDF 和创建候选人申请；请求必须携带 `consent_confirmed: true`。拒绝、含糊答复或沉默都不得调用任何材料写接口。
 6. 使用稳定的本地会话标识和同一份简历文件，依赖工作台幂等处理重复提交。不得在 Skill 中保存或分发工作台私有服务 Token。
 7. 轮询本人本次申请状态。只有接口明确返回成功才说明已入库；处理失败或结果未知时保留错误，不自动制造第二次提交。
 8. “资料待补充”可以入库，但不得描述为可推荐，也不得伪造岗位匹配记录。

@@ -28,6 +28,7 @@ cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
 ```bash
 python3 apply-jobradar/scripts/application_log.py self-test
 python3 apply-jobradar/scripts/confirmation_gate.py self-test
+python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
 ```
 
