@@ -33,4 +33,7 @@
 - 重复请求返回同一个申请，不代表创建第二名候选人。
 - `completed` 表示候选人材料已完成工作台处理；资料待补充时可以没有岗位匹配。
 - 只有资料可匹配时才生成 `pending` 匹配审核，绝不自动批准或发送给企业。
-- 当前公开状态接口不返回工作台一致评分和首次飞书通知回执；这些能力完成前不得自行补造结果。
+- `match` 非空时只包含本次候选人 × 岗位的脱敏结果：`score`、`algorithm_version`、`reason`、`hard_filter_summary`、`keywords`、`evidence` 和 `risks`。它是工作台保存的真实结果，只能在候选人授权提交后回读，不得在 Skill 中重算。
+- 当前公开状态接口仍不返回首次飞书通知回执；该能力完成前不得自行补造通知结果。
+
+公开岗位当前稳定字段是 `id`、`company`、`title`、`summary`、`description`、`category`、`city`、`work_type`、`salary` 和 `required_skills`。`work_mode`、`relocation_required`、`required_start_date` 和 `work_authorization` 缺失时必须标记未知，不能推断为符合。
