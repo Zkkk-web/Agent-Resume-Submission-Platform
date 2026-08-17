@@ -31,6 +31,7 @@ python3 apply-jobradar/scripts/confirmation_gate.py self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
 python3 fanhan-job-agent/scripts/material_gate.py --self-test
+python3 fanhan-job-agent/scripts/workbench_client.py self-test
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
 ```
 
