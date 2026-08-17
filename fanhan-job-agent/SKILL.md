@@ -36,8 +36,8 @@ description: 整理候选人的真实求职材料，读取泛函开放岗位，�
 
 7. 只有用户对本次上传清晰同意时，才运行 `python3 <skill-root>/scripts/workbench_client.py record-consent .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<岗位ID>.json --confirmed`，再运行完整度脚本。拒绝、含糊答复或沉默都不得记录授权，也不得运行 `submit`。
 8. `ingest_ready=true` 后运行 `python3 <skill-root>/scripts/workbench_client.py submit .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<岗位ID>.json`。客户端只调用工作台公开业务 API，使用稳定本地会话标识幂等上传，不打印会话标识，也不携带工作台私有服务 Token。
-9. 使用同一状态文件再次运行 `submit` 只查询既有申请，不制造第二次写入。后续状态使用 `status` 子命令查询；处理失败或结果未知时保留错误，不自动创建新状态文件或更换会话标识。
-10. 只有接口明确返回 `completed` 才说明已入库。`match` 非空时，按原值展示工作台保存的分数、算法版本、依据和风险，明确它发生在本次授权提交之后；不得自行重算。
+9. 使用同一状态文件再次运行 `submit` 只查询既有申请，不制造第二次写入。后续状态使用 `status` 子命令查询；申请或内部通知失败、需要人工处理或结果未知时，不自动创建新状态文件、更换会话标识或重传简历。
+10. 只有接口明确返回 `completed` 才说明已入库。`match` 非空时，按原值展示工作台保存的分数、算法版本、依据和风险，明确它发生在本次授权提交之后；不得自行重算。`notification` 为 `manual` 或 `unknown` 时只告知用户泛函内部正在核查，不得自动重试。
 11. “资料待补充”可以入库，但不得描述为可推荐，也不得伪造岗位匹配记录。
 
 ## 外部网站流程
