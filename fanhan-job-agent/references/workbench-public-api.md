@@ -28,6 +28,8 @@
 
 5. `GET /api/public/candidate-applications/<申请 ID>`，请求头 `X-Application-Client-Token` 使用同一会话标识，读取 `processing`、`completed` 或失败状态。
 
+不要手写请求。主 Skill 使用 `scripts/workbench_client.py` 的 `preview`、`record-consent`、`submit` 和 `status` 子命令。`preview` 不发网络写请求；`submit` 会在任何网络请求之前核对当前 PDF 哈希、授权版本、授权时间、稳定会话标识和最低入库条件。同一状态文件重复运行 `submit` 只查询既有申请。
+
 ## 结果解释
 
 - 重复请求返回同一个申请，不代表创建第二名候选人。
