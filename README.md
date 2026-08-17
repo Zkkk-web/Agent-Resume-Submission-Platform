@@ -29,6 +29,8 @@ cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
 python3 apply-jobradar/scripts/application_log.py self-test
 python3 apply-jobradar/scripts/confirmation_gate.py self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
+python3 fanhan-job-agent/scripts/match_guard.py --self-test
+python3 fanhan-job-agent/scripts/material_gate.py --self-test
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
 ```
 
@@ -36,4 +38,4 @@ python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_
 
 ## 工作台接入
 
-泛函主链路的接口、评分和缺口以 [工作台接入审计](docs/workbench-integration-audit.md) 为准。当前 JobRadar 安全骨架可以继续复用，但开源 Skill 不能携带工作台服务密钥；候选人自助入库身份、指定候选人岗位评估和首次入库飞书通知需要先在工作台补齐。
+泛函主链路的接口、评分和缺口以 [工作台接入审计](docs/workbench-integration-audit.md) 为准。当前 JobRadar 安全骨架可以继续复用；候选人自助入库与本人匹配结果回读已经通过工作台公开接口完成，开源 Skill 不携带服务密钥。首次入库飞书通知仍需在工作台补齐。
