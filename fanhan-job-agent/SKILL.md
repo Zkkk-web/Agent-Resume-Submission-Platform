@@ -57,15 +57,23 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 3. `decision=not_recommended` 时说明明确冲突并停止推荐该岗位；后续工作台即使返回高分也不能覆盖该结论。`decision=needs_review` 时展示岗位缺少的字段并请用户判断，不得把未知推断成通过。授权前只能给出定性证据说明，不得伪造“工作台评分”或复制一套新公式。
 4. 定制材料以“选岗后的统一定制流程”为唯一实现，不再维护第二套定制逻辑。
 5. `material_gate.py` 失败时不得绕过；已有成稿不得覆盖，使用新版本号。
-6. 把候选人确认过的自荐说明写入 `.fanhan-job-agent/self-introduction.txt`，运行 `python3 <skill-root>/scripts/workbench_client.py preview .fanhan-job-agent/profile.json .fanhan-job-agent/job.json .fanhan-job-agent/self-introduction.txt .fanhan-job-agent/submission-<岗位ID>.json`。把命令返回的上传字段、文件名、接收方、用途和当前资料完整度展示给用户，然后逐字展示授权文案：
+6. 材料完成后执行“统一进入泛函业务”，不能直接进入面试辅助。
+
+## 统一进入泛函业务
+
+泛函岗位完成定制后，以及外部岗位记录为 `success`、`failed`、`submission_outcome_unknown` 或 `user_declined` 后，都必须先执行本节。用户拒绝外部投递不等于拒绝把职业档案交给泛函；两项授权必须分开询问。面试辅助排在本节之后。
+
+1. 先检查本地 `submission-*.json`，只匹配当前职业档案中已确认的姓名与联系方式，不能因为共享工作区里存在其他候选人的状态就判定已入库。命中既有申请时，用同一状态文件运行 `status`：`application.status=completed` 只代表已进入工作台；只有 `notification.status=sent` 才能说已进入飞书招聘话题群。`manual` 或 `unknown` 时说明需要泛函内部处理并停止，不更换会话标识、不重传。
+2. 当前工作台公开入口必须关联一个真实泛函岗位。尚无既有申请时，使用本轮已搜索的非测试泛函岗位：当前选择就是泛函岗位时使用 `.fanhan-job-agent/job.json`；当前选择是外部岗位时，选择最匹配的真实泛函岗位并写入 `.fanhan-job-agent/fanhan-intake-job.json`。授权前必须同时展示该关联岗位；不得把外部岗位 ID、测试岗位或验收岗位提交到工作台。若没有合适的真实泛函岗位，如实说明当前接口限制并停止，不能伪造通用入库。
+3. 把候选人确认过的自荐说明写入 `.fanhan-job-agent/self-introduction.txt`，运行 `python3 <skill-root>/scripts/workbench_client.py preview .fanhan-job-agent/profile.json <泛函关联岗位文件> .fanhan-job-agent/self-introduction.txt .fanhan-job-agent/submission-<泛函岗位ID>.json`。把命令返回的上传字段、当前岗位专用简历文件名、关联岗位、接收方、用途和当前资料完整度展示给用户，然后逐字展示授权文案：
 
    > 我同意将上述求职资料提交给泛函，用于候选人档案管理、岗位匹配和招聘团队人工审核。资料将保存于泛函招聘工作台，并可能通过泛函内部飞书招聘话题群通知招聘团队。我可以申请停止推荐或删除档案。
 
-7. 只有用户对本次上传清晰同意时，才运行 `python3 <skill-root>/scripts/workbench_client.py record-consent .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<岗位ID>.json --confirmed`，再运行完整度脚本。拒绝、含糊答复或沉默都不得记录授权，也不得运行 `submit`。
-8. `ingest_ready=true` 后运行 `python3 <skill-root>/scripts/workbench_client.py submit .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<岗位ID>.json`。客户端只调用工作台公开业务 API，使用稳定本地会话标识幂等上传，不打印会话标识，也不携带工作台私有服务 Token。
-9. 使用同一状态文件再次运行 `submit` 只查询既有申请，不制造第二次写入。后续状态使用 `status` 子命令查询；申请或内部通知失败、需要人工处理或结果未知时，不自动创建新状态文件、更换会话标识或重传简历。
-10. 只有接口明确返回 `completed` 才说明已入库。`match` 非空时，按原值展示工作台保存的分数、算法版本、依据和风险，明确它发生在本次授权提交之后；不得自行重算。`notification` 为 `manual` 或 `unknown` 时只告知用户泛函内部正在核查，不得自动重试。
-11. “资料待补充”可以入库，但不得描述为可推荐，也不得伪造岗位匹配记录。
+4. 只有用户对本次上传清晰同意时，才运行 `python3 <skill-root>/scripts/workbench_client.py record-consent .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<泛函岗位ID>.json --confirmed`，再运行完整度脚本。拒绝、含糊答复或沉默都不得记录授权，也不得运行 `submit`。
+5. `ingest_ready=true` 后运行 `python3 <skill-root>/scripts/workbench_client.py submit .fanhan-job-agent/profile.json .fanhan-job-agent/submission-<泛函岗位ID>.json`。客户端只调用工作台公开业务 API，使用稳定本地会话标识幂等上传，不打印会话标识，也不携带工作台私有服务 Token。
+6. 使用同一状态文件再次运行 `submit` 只查询既有申请，不制造第二次写入。后续状态使用 `status` 子命令查询；申请或内部通知失败、需要人工处理或结果未知时，不自动创建新状态文件、更换会话标识或重传简历。
+7. 只有接口明确返回 `completed` 才说明已进入工作台。`match` 非空时，按原值展示工作台保存的分数、算法版本、依据和风险，明确它发生在本次授权提交之后；不得自行重算。“资料待补充”可以入库，但不得描述为可推荐，也不得伪造岗位匹配记录。
+8. 继续查询同一申请的通知状态。只有 `notification.status=sent` 才说明已经进入飞书招聘话题群；`pending` 继续等待状态更新，`manual` 或 `unknown` 只说明需要泛函内部处理。飞书通知成功后只补一句“如果之后需要面试准备，可以让我辅助”，不得立即开始模拟面试或提问。
 
 ## 外部网站流程
 
@@ -77,6 +85,7 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 - 输入个人数据前说明目标网站和字段；最终提交前必须针对当前岗位再次确认。
 - V1 是辅助投递：Agent 先从顶部到底部盘点完整申请表，再准备答案并在浏览器能力可靠时预填；输入后必须重新读取并确认值仍在。文件选择器不稳定时，不再反复尝试自动上传；在完整手工填写清单中给出当前岗位已确认的 `.fanhan-job-agent/outbox/` PDF 链接，请用户拖到右侧申请页。只要存在无法可靠预填的字段，就一次性列出所有检测到的字段、值/答案和状态，必填项在前，并汇总检测、已填并复核、请复制、待回答和请上传的数量；不得只列部分联系方式或笼统声称其他字段已填。
 - 最终提交按钮必须由用户本人检查后点击。点击后 Agent 读取明确结果并写入最小投递记录；结果不明时记为未知，不自动重试。托管代投留到后续版本。
+- 外部申请结果写入本地记录后立即返回“统一进入泛函业务”；不能因为用户放弃外部岗位就跳过泛函授权，也不能直接启动面试辅助。
 - 不绕过验证码，不保存密码、Cookie 或登录态，不在结果不明时自动重试。
 
 ## 申请回答库
@@ -88,7 +97,7 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 ## 轻量面试辅导
 
-1. 面试辅导是可选投后能力，不得阻塞找岗和投递。候选人主动要求，或确认进入面试阶段时才读取 [轻量面试辅导](references/interview-coaching.md)。
+1. 面试辅导是完成泛函业务入库后的可选能力，不得阻塞找岗和投递。只有候选人主动要求面试辅导，或明确确认已经进入真实面试阶段时才读取 [轻量面试辅导](references/interview-coaching.md)；“继续”“测试后续”“已投递”或飞书通知成功都不算启动授权。
 2. 从长期职业主档建立经候选人确认的 STAR 故事库；团队成果与个人贡献必须分开，缺失结果不补造。
 3. 模拟时根据当前 JD 一次只问一个问题，必要时最多追问两次。按内容证据、表达结构、岗位相关性、可信度和个人差异性评分，只给一个最优先改进动作。
 4. 真实面试后可以记录问题、实际回答、面试官追问和候选人自评；练习分数只用于观察表达变化，不解释为录取概率。
