@@ -4,7 +4,7 @@
 
 - 原始简历、作品集正文、联系方式和本地会话标识默认留在候选人当前环境。
 - 本地生成物统一放在工作区 `.fanhan-job-agent/`，原始简历只读，不覆盖。
-- DOCX 转换得到的参考 PDF 放在 `.fanhan-job-agent/source/`，不得直接上传。只有针对当前岗位生成、由用户检查通过且正确命名的 PDF 才能进入 `.fanhan-job-agent/outbox/` 并用于工作台或外部网站。
+- DOCX 转换得到的参考 PDF 放在 `.fanhan-job-agent/source/`，不得直接上传。岗位专用材料必须先生成并展示同名可编辑 HTML；只有用户检查 HTML、亲自导出且正确命名的 PDF 才能进入 `.fanhan-job-agent/outbox/` 并用于工作台或外部网站。
 - 不在终端输出、Git、普通日志或投递记录中保存简历正文、联系方式、Token、Cookie 或表单答案。
 - 如果当前目录是 Git 仓库，确认 `.fanhan-job-agent/` 未被跟踪；必要时提醒用户加入本地忽略规则。
 

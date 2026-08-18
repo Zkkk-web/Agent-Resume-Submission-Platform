@@ -1,6 +1,6 @@
 # JD 定制材料契约
 
-定制过程使用 `.fanhan-job-agent/tailored-proposal.json`。先生成带变更依据的 Markdown 审核稿，再生成 `.fanhan-job-agent/outbox/` 下可编辑、可打印为 PDF 的 HTML；原始简历永远只读。
+定制过程使用 `.fanhan-job-agent/tailored-proposal.json`。针对性提问完成后，第一份候选人可见成稿必须直接生成到 `.fanhan-job-agent/outbox/` 下的可编辑 HTML；原始简历永远只读。
 
 ```json
 {
@@ -54,6 +54,8 @@
 - `artifact_stem` 必须由职业档案中的候选人姓名和当前岗位的公司、职位生成，格式为 `姓名-目标公司-目标岗位-YYYYMMDD-vN`。
 - 原简历文件名中的公司不能继承到新版本，除非它就是当前目标公司。
 - HTML 页面右上角提供“导出 PDF”；用户检查或编辑后，按同一 `artifact_stem` 保存 PDF。
+- HTML 生成后必须立即在 Codex 侧边栏展示。用户明确表示已经编辑并导出前，不得调用其他脚本生成 PDF，不得复用旧 PDF，也不得填写 `profile.application_resume.path`。
+- 工作台和外部投递门禁必须同时检查同名 HTML；只有 PDF、没有同名可编辑 HTML，或 PDF 早于 HTML 时必须拒绝。
 - PDF 确认前做两遍检查：先看页面断行、分页、空白和信息层级，再读取 PDF 文本层，核对姓名与联系方式、阅读顺序、JD 关键词和本轮咨询新增内容。文本层无法读取时明确标记“ATS 解析未验证”，不得只凭页面看起来正常就宣称兼容 ATS。
 
 ## 变更类型

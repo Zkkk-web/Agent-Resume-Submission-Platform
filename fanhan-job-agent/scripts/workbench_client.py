@@ -63,11 +63,21 @@ def resume_path(profile: dict, profile_path: Path) -> Path:
 def validate_pdf(path: Path) -> tuple[str, int]:
     if not path.is_file() or path.suffix.lower() != ".pdf":
         raise ValueError("当前工作台只接受存在的 PDF 简历")
+    if (path.parent.name != "outbox" or path.parent.parent.name != ".fanhan-job-agent"):
+        raise ValueError("岗位专用 PDF 必须来自 .fanhan-job-agent/outbox/")
+    html_path = path.with_suffix(".html")
+    if not html_path.is_file():
+        raise ValueError("缺少同名可编辑 HTML；禁止跳过 HTML 直接上传 PDF")
+    page = html_path.read_text(encoding="utf-8")
+    if 'contenteditable="true"' not in page or "window.print()" not in page:
+        raise ValueError("同名 HTML 不是可编辑、可导出的简历")
     size = path.stat().st_size
     with path.open("rb") as stream:
         header = stream.read(5)
     if not 0 < size <= MAX_PDF_BYTES or header != b"%PDF-":
         raise ValueError("PDF 必须有效且不超过 10 MB")
+    if path.stat().st_mtime_ns < html_path.stat().st_mtime_ns:
+        raise ValueError("PDF 必须由用户在检查 HTML 后导出")
     return sha256(path), size
 
 
@@ -337,6 +347,10 @@ def self_test() -> None:
         career_document.write_text("# 职业经历\n", encoding="utf-8")
         tailored_resume = root / ".fanhan-job-agent" / "outbox" / "张三-Example-AI产品经理-20260818-v1.pdf"
         tailored_resume.parent.mkdir(parents=True, exist_ok=True)
+        tailored_resume.with_suffix(".html").write_text(
+            '<main contenteditable="true"></main><button onclick="window.print()">导出 PDF</button>',
+            encoding="utf-8",
+        )
         tailored_resume.write_bytes(b"%PDF-tailored")
         job_path = root / "job.json"
         introduction_path = root / "intro.txt"
