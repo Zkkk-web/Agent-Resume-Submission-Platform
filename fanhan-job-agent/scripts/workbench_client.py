@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 from profile_status import evaluate as profile_evaluate
 
 
-SCHEMA = "fanhan-workbench-submission-v1"
+SCHEMA = "fanhan-workbench-submission-v2"
 CONSENT_VERSION = "fanhan-candidate-materials-v1"
 AUTHORIZATION_TEXT = (
     "我同意将上述求职资料提交给泛函，用于候选人档案管理、岗位匹配和招聘团队人工审核。"
@@ -76,6 +76,22 @@ def validate_state_path(path: Path) -> None:
         raise ValueError("提交状态必须保存在 .fanhan-job-agent/ 中")
 
 
+def confirmed_identity(profile: dict) -> dict:
+    name = str(profile.get("identity", {}).get("name") or "").strip()
+    contact = profile.get("contact", {})
+    email = str(contact.get("email") or "").strip().lower()
+    phone = str(contact.get("phone_or_wechat") or "").strip()
+    valid_email = bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email))
+    valid_phone = phone.lower() not in {"", "unknown", "未知"} and len(phone) >= 5
+    if not name or not (valid_email or valid_phone):
+        raise ValueError("候选人确认身份必须包含姓名和有效邮箱或联系方式")
+    return {
+        "candidate_name": name,
+        "candidate_email": email if valid_email else "",
+        "candidate_phone_or_wechat": phone if valid_phone else "",
+    }
+
+
 def base_url(value: str) -> str:
     value = value.strip().rstrip("/")
     parsed = urlparse(value)
@@ -94,6 +110,7 @@ def prepare(
     profile = load(profile_path)
     if profile.get("schema_version") != "fanhan-career-profile-v1":
         raise ValueError("profile.schema_version 必须是 fanhan-career-profile-v1")
+    identity = confirmed_identity(profile)
     job = load(job_path)
     job_id = str(job.get("id") or "").strip()
     job_title = str(job.get("title") or "").strip()
@@ -112,6 +129,7 @@ def prepare(
     signature = hashlib.sha256(json.dumps({
         "service_url": service_url, "job_id": job_id, "resume_sha256": digest,
         "self_introduction": introduction, "portfolio_url": portfolio_url,
+        "confirmed_identity": identity,
     }, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
     if state_path.exists():
         state = load(state_path)
@@ -134,6 +152,7 @@ def prepare(
             "resume_size": size,
             "self_introduction": introduction,
             "portfolio_url": portfolio_url,
+            **identity,
             "client_token": secrets.token_urlsafe(24),
             "consent_version": CONSENT_VERSION,
             "application": None,
@@ -146,6 +165,7 @@ def prepare(
         "resume": {"name": resume.name, "size": size, "sha256": digest},
         "portfolio_included": bool(portfolio_url),
         "self_introduction_characters": len(introduction),
+        "confirmed_identity_included": True,
         "authorization_text": AUTHORIZATION_TEXT,
         "network_writes": 0,
     }
@@ -156,7 +176,9 @@ def record_consent(profile_path: Path, state_path: Path) -> None:
     profile = load(profile_path)
     state = load(state_path)
     digest, _ = validate_pdf(resume_path(profile, profile_path))
-    if state.get("schema_version") != SCHEMA or digest != state.get("resume_sha256"):
+    identity = confirmed_identity(profile)
+    if (state.get("schema_version") != SCHEMA or digest != state.get("resume_sha256")
+            or any(state.get(key) != value for key, value in identity.items())):
         raise ValueError("提交状态与当前简历版本不一致")
     profile["consent"] = {
         "confirmed": True,
@@ -182,6 +204,9 @@ def authorized(profile: dict, profile_path: Path, state: dict) -> Path:
         raise PermissionError("没有与当前材料绑定的可审计授权；禁止上传")
     if digest != state.get("resume_sha256"):
         raise PermissionError("简历已变化；必须重新预览并授权")
+    identity = confirmed_identity(profile)
+    if any(state.get(key) != value for key, value in identity.items()):
+        raise PermissionError("候选人身份已变化；必须重新预览并授权")
     status = profile_evaluate(profile, profile_path.parent)
     if not status["ingest_ready"]:
         raise ValueError(f"未达到最低入库条件：{status['missing_for_ingest']}")
@@ -222,6 +247,9 @@ class ApiClient:
             "client_token": state["client_token"],
             "portfolio_url": state["portfolio_url"],
             "self_introduction": state["self_introduction"],
+            "candidate_name": state["candidate_name"],
+            "candidate_email": state["candidate_email"],
+            "candidate_phone_or_wechat": state["candidate_phone_or_wechat"],
             "consent_confirmed": True,
         }, ensure_ascii=False).encode()
         return self.request(
@@ -275,6 +303,7 @@ class FakeClient:
     def __init__(self):
         self.reads = 0
         self.writes = 0
+        self.created_identity = None
 
     def health(self):
         self.reads += 1
@@ -286,6 +315,10 @@ class FakeClient:
 
     def create(self, state, file_id):
         self.writes += 1
+        self.created_identity = {
+            key: state[key]
+            for key in ["candidate_name", "candidate_email", "candidate_phone_or_wechat"]
+        }
         return {"id": "application-test", "status": "processing", "repeated": False}
 
     def status(self, state):
@@ -340,6 +373,7 @@ def self_test() -> None:
         preview = prepare(profile_path, job_path, introduction_path, state_path, "https://workbench.example.com")
         assert preview["network_writes"] == 0
         assert preview["resume"]["name"] == tailored_resume.name
+        assert preview["confirmed_identity_included"] is True
         fake = FakeClient()
         try:
             submit(profile_path, state_path, fake)
@@ -353,6 +387,11 @@ def self_test() -> None:
         second = submit(profile_path, state_path, fake)
         assert first["id"] == second["id"] == "application-test"
         assert fake.writes == 2  # One PDF upload and one application creation.
+        assert fake.created_identity == {
+            "candidate_name": "张三",
+            "candidate_email": "candidate@example.com",
+            "candidate_phone_or_wechat": "",
+        }
         assert second["repeated"] is True
         assert "client_token" not in preview
     print("workbench_client self-test: ok")
