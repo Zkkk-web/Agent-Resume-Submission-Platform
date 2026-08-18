@@ -18,15 +18,15 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 1. 先说明：原始材料默认只在当前本地环境处理；用户明确授权前，不向泛函或招聘网站上传简历、联系方式和作品集。
 2. 请用户提供原始简历路径。作品集、GitHub、个人网站和其他职业证据均为可选，不因缺少这些链接阻止材料整理或泛函入库。
 3. 核验文件真实存在且可读。接受 PDF 或 DOCX：DOCX 可先转换为本地参考 PDF，但必须写入 `.fanhan-job-agent/source/`，不得放入待投递的 `outbox/`。原文件保持不变。
-4. **每位候选人都必须调用 `$职业资产`**：先读现有材料并生成或更新 `.fanhan-job-agent/职业经历.md`，再把机器可读索引写入 `.fanhan-job-agent/profile.json`。材料看起来完整也不能跳过；紧急求职时使用智能开局，先做可用初稿，不进行冗长访谈。
-5. 运行 `python3 <skill-root>/scripts/profile_status.py .fanhan-job-agent/profile.json --output .fanhan-job-agent/profile-status.json`。状态不是 `可匹配` 时，每轮最多补三个关键缺口并更新职业主档；**状态变为可匹配前禁止搜索岗位**。
+4. **每位候选人都必须调用 `$职业资产`**：先读现有材料并生成或更新 `.fanhan-job-agent/职业经历.md`，再把机器可读索引写入 `.fanhan-job-agent/profile.json`。随后围绕材料中最有潜力的一段经历，依次补齐代表性成果、个人贡献、困难与判断、结果证据、学习与成长五个维度。一次只问一个；材料已有答案时先给出提取摘要让候选人确认或纠正，不能直接跳过或代替确认。确认内容写回长期主档和 `career_consultation`。
+5. 运行 `python3 <skill-root>/scripts/profile_status.py .fanhan-job-agent/profile.json --output .fanhan-job-agent/profile-status.json`。状态不是 `可匹配` 时，每轮只询问返回的一个 `next_questions`，得到回答后更新职业主档并重新检查；**状态变为可匹配前禁止搜索岗位**。
 6. 未提供的信息写为“未知”，不得用当前城市推断期望地点、远程意愿或搬迁意愿。保留原始文件，不覆盖原简历；不要把 `.fanhan-job-agent/`、候选人材料或本地会话标识提交到 Git。
 
 ## 档案与追问
 
 1. `$职业资产` 维护的 `.fanhan-job-agent/职业经历.md` 是长期主档；`.fanhan-job-agent/profile.json` 只是供匹配和接口使用的索引，不能替代主档。未知字段必须使用 `unknown` 或空数组，非未知字段必须记录材料位置或候选人明确回答作为证据。
 2. `profile_status.py` 只输出状态和字段代码，不输出简历正文或联系方式；状态文件必须与当前 `profile.json` 哈希一致。
-3. `profile_status=待补充` 时，每轮最多询问返回的前三个 `next_questions`；得到回答后更新档案、证据并重新检查。不要询问薪资、行业、公司偏好、作品集或 GitHub，除非当前具体岗位需要。
+3. `profile_status=待补充` 时，每轮只询问返回的一个 `next_questions`；得到回答后更新档案、证据并重新检查。五维咨询问题必须结合候选人的真实材料改写成人话，不能机械念字段名。不要询问薪资、行业、公司偏好、作品集或 GitHub，除非当前具体岗位需要。
 4. “待补充／可匹配”只表示资料完整度，不等于工作台“待审核／通过／不通过”。不得把两组状态互相覆盖。
 5. 授权发生前，`ingest_ready=false` 是正常结果，不要为了让校验通过而代替用户确认。
 
@@ -44,8 +44,8 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 1. 把用户明确选择的单个岗位及完整 JD 写入 `.fanhan-job-agent/job.json`，并用 `match_guard.py` 检查用户明确限制。
 2. 先向用户展示四类针对性结论：匹配点、明显缺口、申请风险、建议重点修改的经历或表达。不能只给岗位链接或笼统匹配分。
-3. 当前 JD 暴露出职业主档缺口时，调用 `$职业资产` 最多追问三个与本岗位直接相关的问题，并同步更新 `职业经历.md`、`profile.json` 和 `profile-status.json`。
-4. 生成 `.fanhan-job-agent/tailored-proposal.json`。`sections` 必须组成一份完整简历，每项调整都关联 JD 依据和候选人事实证据；新增或改变事实必须逐项确认。
+3. 无论职业主档看起来是否完整，都要结合当前 JD 和候选人真实经历追问 1–2 个最可能提高面试机会的问题，一次只问一个。问题必须指向 JD 的具体要求和主档中的具体经历；候选人确认后，把答案同步更新到 `职业经历.md`、`profile.json` 和 `profile-status.json`。
+4. 生成 `.fanhan-job-agent/tailored-proposal.json`，并记录已完成的 `consultation.questions`。每个问题必须通过 `used_in_change_ids` 进入至少一项简历变更；不能只做改写或排序却丢掉本轮确认的内容。`sections` 必须组成一份完整简历，每项调整都关联 JD 依据和候选人事实证据；新增或改变事实必须逐项确认。
 5. 文件名必须是 `姓名-目标公司-目标岗位-YYYYMMDD-vN`，不得继承原简历中的旧目标公司。先运行 `material_gate.py` 生成同名 Markdown 审核稿，再生成 `.fanhan-job-agent/outbox/<文件名>.html`。
 6. 向用户提供 HTML 链接。用户可以直接修改并点击“导出 PDF”；导出的 PDF 必须保存为 `.fanhan-job-agent/outbox/<同一文件名>.pdf`。原始简历只读。
 7. 用户确认岗位专用 PDF 后，把它记录为 `profile.application_resume.path`。没有当前岗位的建议、提案、HTML 和已检查 PDF 时，禁止进入工作台提交或 `$apply-external-jobs` 的申请步骤。
@@ -81,6 +81,6 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 ## 当前交付边界
 
-- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、结构化档案、本地硬限制、可审计定制稿、可编辑 HTML、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、Codex 安装和 WorkBuddy 启动烟测。
+- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、可审计定制稿、可编辑 HTML、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、Codex 安装和 WorkBuddy 启动烟测。
 - 后续 Issue 覆盖：三名真实候选人验收与 Bonjour 侧边栏投递预演。
 - 在真实验收完成前，不得宣称已完成稳定外部代投。

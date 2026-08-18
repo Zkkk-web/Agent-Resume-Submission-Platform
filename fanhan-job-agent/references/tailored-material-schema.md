@@ -11,6 +11,20 @@
     "title": "岗位名称"
   },
   "artifact_stem": "候选人姓名-目标公司-目标岗位-YYYYMMDD-v1",
+  "consultation": {
+    "status": "completed",
+    "questions": [
+      {
+        "id": "question-1",
+        "question": "结合 JD 和职业主档生成的具体问题",
+        "jd_basis": ["JD 中触发该问题的具体要求"],
+        "profile_basis": ["职业经历.md 中值得补强的经历位置"],
+        "answer_summary": "候选人确认后的回答摘要",
+        "confirmed": true,
+        "used_in_change_ids": ["change-1"]
+      }
+    ]
+  },
   "sections": [
     {
       "heading": "相关经历",
@@ -33,6 +47,8 @@
 
 ## 完整性与文件名
 
+- 选岗后、生成简历前必须完成 1–2 个针对当前 JD 的问题；一次只问一个。每个问题都要同时说明 `jd_basis` 和 `profile_basis`，回答必须由候选人确认，并通过 `used_in_change_ids` 进入至少一项真实简历变更。缺少咨询记录、问题超过两个或回答未用于成稿时，`material_gate.py` 必须拒绝生成文件。
+- 针对性回答先同步回长期 `职业经历.md` 和 `profile.json`，再派生当前岗位简历。不能只改措辞而丢掉本轮确认的新证据。
 - `sections` 必须构成一份完整可投递简历，不能只包含零散修改建议。
 - 修改建议先在聊天中向候选人展示，再进入成稿。
 - `artifact_stem` 必须由职业档案中的候选人姓名和当前岗位的公司、职位生成，格式为 `姓名-目标公司-目标岗位-YYYYMMDD-vN`。

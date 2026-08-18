@@ -60,7 +60,7 @@ def expected_artifact_prefix(profile: dict, proposal: dict) -> str:
     ]) + "-"
 
 
-def validate(profile: dict, proposal: dict) -> tuple[list[dict], list[dict]]:
+def validate(profile: dict, proposal: dict) -> tuple[list[dict], list[dict], dict]:
     if profile.get("schema_version") != "fanhan-career-profile-v1":
         raise ValueError("profile.schema_version 必须是 fanhan-career-profile-v1")
     if proposal.get("schema_version") != "fanhan-tailored-material-v1":
@@ -101,6 +101,34 @@ def validate(profile: dict, proposal: dict) -> tuple[list[dict], list[dict]]:
             raise ValueError(f"非事实变更 {change_id}.confirmation 必须是 not_required")
         change_by_id[change_id] = change
 
+    consultation = proposal.get("consultation", {})
+    if consultation.get("status") != "completed":
+        raise ValueError("生成简历前必须完成本岗位的针对性咨询")
+    questions = consultation.get("questions")
+    if not isinstance(questions, list) or not 1 <= len(questions) <= 2:
+        raise ValueError("consultation.questions 必须包含 1–2 个已完成问题")
+    question_ids = set()
+    used_change_ids = set()
+    for index, question in enumerate(questions):
+        question_id = required_text(question.get("id"), f"consultation.questions[{index}].id")
+        if question_id in question_ids:
+            raise ValueError(f"重复的 consultation question id：{question_id}")
+        question_ids.add(question_id)
+        required_text(question.get("question"), f"{question_id}.question")
+        string_list(question.get("jd_basis"), f"{question_id}.jd_basis")
+        string_list(question.get("profile_basis"), f"{question_id}.profile_basis")
+        required_text(question.get("answer_summary"), f"{question_id}.answer_summary")
+        if question.get("confirmed") is not True:
+            raise ValueError(f"{question_id} 未经候选人确认")
+        linked = string_list(question.get("used_in_change_ids"), f"{question_id}.used_in_change_ids")
+        unknown = [item for item in linked if item not in change_by_id]
+        if unknown:
+            raise ValueError(f"{question_id} 引用了未知变更：{unknown}")
+        used_change_ids.update(linked)
+
+    if not used_change_ids:
+        raise ValueError("针对性咨询结果未进入简历变更")
+
     referenced = set()
     for index, section in enumerate(sections):
         required_text(section.get("heading"), f"sections[{index}].heading")
@@ -113,11 +141,18 @@ def validate(profile: dict, proposal: dict) -> tuple[list[dict], list[dict]]:
     unreferenced = set(change_by_id) - referenced
     if unreferenced:
         raise ValueError(f"存在未进入成稿的变更：{sorted(unreferenced)}")
-    return sections, changes
+    return sections, changes, consultation
 
 
-def render_markdown(job: dict, sections: list[dict], changes: list[dict]) -> str:
+def render_markdown(job: dict, sections: list[dict], changes: list[dict], consultation: dict) -> str:
     lines = [f"# {job['company']}｜{job['title']}｜定制申请材料", "", f"岗位 ID：`{job['id']}`", ""]
+    lines.extend(["## 本岗位咨询记录", ""])
+    for question in consultation["questions"]:
+        lines.extend([
+            f"### {question['question']}", "",
+            f"- 回答摘要：{question['answer_summary']}",
+            f"- 用于变更：{'；'.join(question['used_in_change_ids'])}", "",
+        ])
     for section in sections:
         lines.extend([f"## {section['heading']}", "", section["content"].strip(), ""])
     lines.extend(["## JD 依据与变更记录", ""])
@@ -150,7 +185,7 @@ def render_html(title: str, sections: list[dict]) -> str:
 def render(profile_path: Path, proposal_path: Path, output_path: Path) -> None:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
-    sections, changes = validate(profile, proposal)
+    sections, changes, consultation = validate(profile, proposal)
     original = resume_path(profile, profile_path).resolve()
     if not original.is_file():
         raise ValueError("原始简历不存在")
@@ -164,7 +199,7 @@ def render(profile_path: Path, proposal_path: Path, output_path: Path) -> None:
 
     original_hash = sha256(original)
     rendered = (
-        render_markdown(proposal["job"], sections, changes)
+        render_markdown(proposal["job"], sections, changes, consultation)
         if output.suffix.lower() == ".md"
         else render_html(output.stem, sections)
     )
@@ -196,6 +231,18 @@ def self_test() -> None:
             "schema_version": "fanhan-tailored-material-v1",
             "job": {"id": "job-1", "company": "Example", "title": "AI 产品经理"},
             "artifact_stem": "张三-Example-AI产品经理-20260818-v1",
+            "consultation": {
+                "status": "completed",
+                "questions": [{
+                    "id": "question-1",
+                    "question": "你亲自推动了哪个关键交付？",
+                    "jd_basis": ["JD 要求端到端交付"],
+                    "profile_basis": ["职业经历.md 中的 AI 项目"],
+                    "answer_summary": "候选人确认自己负责验收闭环。",
+                    "confirmed": True,
+                    "used_in_change_ids": ["change-2"],
+                }],
+            },
             "sections": [{
                 "heading": "相关经历", "content": "负责有证据的 AI 产品交付。",
                 "change_ids": ["change-1", "change-2"],
@@ -222,6 +269,16 @@ def self_test() -> None:
         assert not output.exists()
 
         proposal["changes"][1].update(confirmation="confirmed", confirmed_at="2026-08-18T00:00:00Z")
+        proposal_without_consultation = json.loads(json.dumps(proposal, ensure_ascii=False))
+        proposal_without_consultation.pop("consultation")
+        proposal_path.write_text(json.dumps(proposal_without_consultation, ensure_ascii=False), encoding="utf-8")
+        try:
+            render(profile_path, proposal_path, output)
+            raise AssertionError("未完成针对性咨询不应生成成稿")
+        except ValueError as error:
+            assert "针对性咨询" in str(error)
+        assert not output.exists()
+
         proposal_path.write_text(json.dumps(proposal, ensure_ascii=False), encoding="utf-8")
         before = sha256(original)
         render(profile_path, proposal_path, output)
