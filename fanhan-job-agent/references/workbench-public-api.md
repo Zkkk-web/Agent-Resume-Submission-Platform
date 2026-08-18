@@ -22,9 +22,14 @@
   "client_token": "本地随机会话标识",
   "portfolio_url": "可选的 HTTP(S) 链接",
   "self_introduction": "候选人确认过的自荐说明",
+  "candidate_name": "本地职业档案中经候选人确认的姓名",
+  "candidate_email": "有效邮箱；与联系方式至少提供一项",
+  "candidate_phone_or_wechat": "电话或微信；与邮箱至少提供一项",
   "consent_confirmed": true
 }
 ```
+
+候选人确认身份与当前岗位专用 PDF 一起绑定到本地私有提交状态和授权。工作台先校验这些字段，并在模型漏抽取身份时作为确定性回退；它们不能绕过授权，也不会出现在 `preview` 的用户可见明文结果中。旧版提交状态必须重新执行 `preview`，不得直接复用。
 
 5. `GET /api/public/candidate-applications/<申请 ID>`，请求头 `X-Application-Client-Token` 使用同一会话标识，读取 `processing`、`completed` 或失败状态。
 
