@@ -18,6 +18,13 @@ ENUMS = {
     "intent.remote_preference": {"accept", "reject", "conditional"},
     "intent.relocation_preference": {"accept", "reject", "conditional"},
 }
+CONSULTATION_DIMENSIONS = {
+    "representative_achievement": "从你现有材料里最能代表实力的一段经历开始：你当时要解决什么问题，最后做成了什么？",
+    "personal_contribution": "在这段经历里，哪些关键动作是你亲自负责或推动的？",
+    "challenge_and_decision": "过程中最难的约束或取舍是什么？你当时为什么这样判断？",
+    "result_evidence": "这件事最后有什么可以验证的结果、数据、反馈或交付物？",
+    "learning_and_growth": "这段经历最能说明你后来学会了什么，或你下一次会怎样做得更好？",
+}
 QUESTIONS = {
     "resume.path": "请提供原始简历文件路径。",
     "identity.name": "你的姓名应该怎样写在申请材料上？",
@@ -32,6 +39,7 @@ QUESTIONS = {
     "intent.available_from": "你最早什么时候可以入职？",
     "education": "简历中的教育信息是否已完整提取？若没有教育经历，请明确确认。",
     "core_experiences": "简历中的核心工作、实习或项目经历是否已完整提取？若没有，请明确确认。",
+    **{f"career_consultation.{key}": value for key, value in CONSULTATION_DIMENSIONS.items()},
 }
 
 
@@ -95,6 +103,16 @@ def contact_has_evidence(profile: dict) -> bool:
     )
 
 
+def completed_consultation_dimension(value: object) -> bool:
+    return bool(
+        isinstance(value, dict)
+        and value.get("confirmed") is True
+        and known(value.get("summary"))
+        and isinstance(value.get("evidence"), list)
+        and any(known(item) for item in value["evidence"])
+    )
+
+
 def evaluate(profile: dict, base_dir: Path) -> dict:
     if profile.get("schema_version") != "fanhan-career-profile-v1":
         raise ValueError("schema_version 必须是 fanhan-career-profile-v1")
@@ -126,6 +144,11 @@ def evaluate(profile: dict, base_dir: Path) -> dict:
         if section.get("status") != "known" or not evidence(profile, field):
             missing.append(field)
 
+    consultation = profile.get("career_consultation", {})
+    for dimension in CONSULTATION_DIMENSIONS:
+        if not completed_consultation_dimension(consultation.get(dimension)):
+            missing.append(f"career_consultation.{dimension}")
+
     consent = profile.get("consent", {})
     ingest_missing = []
     if "resume.path" in missing:
@@ -142,7 +165,7 @@ def evaluate(profile: dict, base_dir: Path) -> dict:
     return {
         "profile_status": "可匹配" if not missing else "待补充",
         "missing_for_matching": missing,
-        "next_questions": [QUESTIONS[item] for item in missing[:3]],
+        "next_questions": [QUESTIONS[missing[0]]] if missing else [],
         "ingest_ready": not ingest_missing,
         "missing_for_ingest": ingest_missing,
     }
@@ -170,6 +193,14 @@ def self_test() -> None:
             },
             "education": {"status": "known", "items": []},
             "core_experiences": {"status": "known", "items": []},
+            "career_consultation": {
+                dimension: {
+                    "summary": f"已确认的{dimension}",
+                    "confirmed": True,
+                    "evidence": ["候选人明确回答"],
+                }
+                for dimension in CONSULTATION_DIMENSIONS
+            },
             "evidence": {
                 "identity.name": ["简历第 1 页"],
                 "contact.email": ["简历第 1 页"],
@@ -212,6 +243,15 @@ def self_test() -> None:
         assert result["profile_status"] == "待补充"
         assert "intent.preferred_locations" in result["missing_for_matching"]
         assert result["missing_for_ingest"] == ["consent.confirmed"]
+
+        no_consultation = json.loads(json.dumps(complete, ensure_ascii=False))
+        no_consultation.pop("career_consultation")
+        result = evaluate(no_consultation, Path(directory))
+        assert result["profile_status"] == "待补充"
+        assert result["missing_for_matching"][-5:] == [
+            f"career_consultation.{dimension}" for dimension in CONSULTATION_DIMENSIONS
+        ]
+        assert len(result["next_questions"]) == 1
     print("profile_status self-test: ok")
 
 

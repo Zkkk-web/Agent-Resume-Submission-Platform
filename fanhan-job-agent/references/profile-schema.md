@@ -42,6 +42,17 @@
     "status": "unknown",
     "items": []
   },
+  "career_consultation": {
+    "representative_achievement": {
+      "summary": "候选人确认后的长期可复用摘要",
+      "confirmed": true,
+      "evidence": ["候选人明确回答或对材料提取结果的明确确认"]
+    },
+    "personal_contribution": {},
+    "challenge_and_decision": {},
+    "result_evidence": {},
+    "learning_and_growth": {}
+  },
   "optional_links": [],
   "evidence": {},
   "consent": {
@@ -79,13 +90,19 @@
 
 `career_document.path` 必须指向 `$职业资产` 根据当前材料生成或更新的非空 `职业经历.md`。`profile.json` 只是机器可读索引，不能代替职业主档。
 
+## 首次职业咨询
+
+进入找岗前，必须完成五个长期复用维度：代表性成果、个人贡献、困难与判断、结果证据、学习与成长。每个维度都必须包含非空 `summary`、`confirmed=true` 和至少一条 `evidence`。
+
+问题文字要结合候选人材料中最有潜力的一段经历生成，不照着字段名机械提问；一次只问一个。材料已经覆盖某个维度时，先给出提取摘要，让候选人确认或纠正，不能直接替候选人确认。确认后的完整内容同步写入 `职业经历.md`，`profile.json` 只保存短摘要与证据位置。
+
 `application_resume.path` 只在用户确认当前岗位专用 PDF 后填写；它不能指向原始简历或仅做格式转换的 PDF。工作台和外部申请只使用该文件。
 
 只记录来源位置或候选人确认，不复制大段简历正文。当前城市不是期望地点证据；模型推断不是远程或搬迁意愿证据。
 
 ## 两种状态彼此独立
 
-- `profile_status=待补充/可匹配`：只表示材料是否足以进入岗位推荐。
+- `profile_status=待补充/可匹配`：表示基础材料和首次五维职业咨询是否都足以进入岗位推荐。
 - `ingest_ready=true/false`：只表示是否具备原始简历、有效联系方式和可审计授权。
 
 因此，“待补充但已授权”的候选人可以入库，不能进入岗位推荐；“可匹配但未授权”的候选人只能留在本地，不能上传泛函。
