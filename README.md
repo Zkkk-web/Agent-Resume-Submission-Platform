@@ -14,7 +14,7 @@ V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先�
 
 Issue #25 的只读探测已把 Bonjour 选为首个直接投递候选，Watcha 为第二顺位，JobRadar 只作岗位发现源。详细证据见 [外部招聘网站可行性探测](docs/external-site-feasibility-issue-08.md)。在 Codex 侧边栏完成真实预演前，不增加站点适配器抽象。
 
-Watcha 查岗优先使用其页面自身调用的公开接口 `https://watcha.cn/jobs-api/v1/public/teams`。`/study/jobs` 是前端路由，初始 HTML 可能显示共学营标题；Skill 不得根据页面标题误判无岗位。
+外部岗位发现统一运行 `apply-external-jobs/scripts/external_jobs.py`：Bonjour 读取公开职位页随页面返回的岗位数据，Watcha 读取其公开 feed，JobRadar 准确返回免费预览/会员限制。浏览器只负责选岗后的详情、登录和申请，不再用页面加载是否超时判断整个平台可用性。
 
 V1 不包含候选人平台账号、积分付费、三个外部网站稳定适配或验证码绕过。WorkBuddy 当前只验收主 Skill 可安装、触发并进入材料采集。
 
@@ -41,6 +41,7 @@ cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
 ```bash
 python3 apply-external-jobs/scripts/application_log.py self-test
 python3 apply-external-jobs/scripts/confirmation_gate.py self-test
+python3 apply-external-jobs/scripts/external_jobs.py --self-test
 python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test

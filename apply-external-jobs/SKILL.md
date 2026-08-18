@@ -1,6 +1,6 @@
 ---
 name: apply-external-jobs
-description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探索岗位，并完成选岗确认、表单辅助和最小结果记录。适用于泛函求职 Agent 的外部招聘网站流程；Bonjour、Watcha 可作为直接申请候选，JobRadar 仅作岗位发现源。不得切换系统默认浏览器、绕过验证码、猜测申请事实或替用户点击最终提交。
+description: 从 Bonjour、Watcha 和 JobRadar 探索岗位，并在 Codex 内置浏览器中完成选岗确认、表单辅助和最小结果记录。适用于泛函求职 Agent 的外部招聘网站流程；Bonjour、Watcha 可作为直接申请候选，JobRadar 受登录/会员限制。不得切换系统默认浏览器、绕过验证码、付费限制、猜测申请事实或替用户点击最终提交。
 ---
 
 # 外部招聘平台辅助投递
@@ -17,7 +17,7 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 
 1. 返回 `$fanhan-job-agent`，确认 `$职业资产` 已生成非空 `.fanhan-job-agent/职业经历.md`、`.fanhan-job-agent/profile.json` 和与当前档案哈希一致的 `profile-status.json`。状态不是 `可匹配` 时停止找岗并补齐最小缺口；不得用原始简历直接开始搜索。
 2. 使用 `scripts/application_log.py duplicate` 检查工作区 `.fanhan-job-agent/external-applications.jsonl`；命中成功记录时跳过，除非用户明确要求重投。
-3. 只在 Codex 内置浏览器搜索 Bonjour、Watcha 和 JobRadar。由主 Skill 发起默认多来源找岗时，三个来源都必须尝试后再返回，不能找到第一个来源的结果就停止。Bonjour、Watcha 可作为站内申请候选；JobRadar 只负责发现岗位，实际申请应跟随其真实来源站点。不得调用系统默认浏览器。
+3. 优先运行 `python3 <skill-root>/scripts/external_jobs.py --query '<求职关键词>' --limit 20`，一次读取 Bonjour、Watcha 和 JobRadar 的结构化状态。岗位发现不得依赖浏览器渲染；单一来源失败不得阻塞其他来源。Bonjour、Watcha 可作为站内申请候选；JobRadar 未获得合作 API 前必须如实标记免费预览或会员限制，不得绕过。不得调用系统默认浏览器。
 4. 展示来源、公司、职位、地点、岗位链接、申请链接、匹配点、缺口和风险。当前打开页面只算环境上下文，绝不等于用户选择。
 5. 用户明确选择单个岗位后，运行 `scripts/confirmation_gate.py select`，把公司、职位、岗位链接、申请链接和选择时间写入 `.fanhan-job-agent/selected-external-job.json`。记录缺失或与当前岗位不一致时，禁止发送个人数据、上传材料或准备提交。
 6. 返回 `$fanhan-job-agent` 执行“选岗后的统一定制流程”：展示匹配点、缺口、风险和具体修改建议；生成与当前公司和职位绑定的完整 HTML 简历；由用户检查并导出同名 PDF。缺少任一产物时不得打开申请表。
@@ -26,12 +26,12 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 9. 展示最终摘要，并在交给用户点击前用与 `build` 完全相同的公司、岗位、档案、材料和字段参数运行 `scripts/confirmation_gate.py verify`，再附加 `--expected '<build 返回的 fingerprint>'`。选岗、页面、材料或字段变化时必须停止。V1 最终提交按钮由用户本人点击。
 10. 用户点击后，只凭明确成功文案、申请编号或平台状态记录 `success`；明确失败记为 `failed`；结果含糊或超时记为 `failed: submission_outcome_unknown`，不得自动重试。
 
-## Watcha 读取规则
+## 外部来源读取规则
 
-1. 固定查岗页是 `https://watcha.cn/study/jobs`。该页面是 SPA 路由，初始 HTML 的标题、canonical 和营销文案可能仍显示“AI 产品经理共学营”；这些信息不能作为“没有岗位”的证据。
-2. 优先运行 `python3 <skill-root>/scripts/watcha_jobs.py --query '<求职关键词>' --limit 20`，从观猹岗位页自己使用的公开接口 `https://watcha.cn/jobs-api/v1/public/teams` 读取并标准化岗位。返回有效 `teams/jobs` 后，Watcha 才标记为 `已搜索`。
-3. 接口失败时才降级到内置浏览器，等待渲染后的“X 个在招岗位”或真实岗位卡片。接口和渲染列表都失败时标记 `暂不可用`，不得写成 `无结果`。
-4. 岗位详情链接使用脚本返回的 `job_url`；不要改去产品首页、招聘入口介绍页或旧 VibeKnow 页面判断全部 Watcha 岗位。
+1. Bonjour 从公开职位页随页面返回的岗位数据读取；不要先打开右侧栏逐卡滚动。脚本没有识别到岗位时标记 `暂不可用`，不得写成 `无结果`。
+2. Watcha 从查岗页自己使用的公开接口 `https://watcha.cn/jobs-api/v1/public/teams` 读取。`/study/jobs` 是 SPA 路由，初始标题或营销文案不能作为“没有岗位”的证据。
+3. JobRadar 默认返回 `membership_required`：免费层只提供基础预览，完整岗位与投递入口需登录/会员。未获得合作 API 前不得直接读取其后台数据库绕过限制。
+4. 右侧栏浏览器只在用户选中岗位后用于查看详情、登录和申请。公开数据读取失败时保留结构化失败状态并继续其他来源，不用浏览器反复重试搜索。
 
 ## 硬边界
 
@@ -47,6 +47,7 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 
 ```bash
 python3 scripts/confirmation_gate.py select --company '<公司>' --job-title '<职位>' --job-url '<岗位链接>' --application-url '<申请链接>' --output .fanhan-job-agent/selected-external-job.json --confirmed
+python3 scripts/external_jobs.py --query '<求职关键词>' --limit 20
 python3 scripts/watcha_jobs.py --query '<求职关键词>' --limit 20
 python3 scripts/application_log.py duplicate --job-url '<岗位链接>' --application-url '<申请链接>'
 python3 scripts/confirmation_gate.py build --company '<公司>' --job-title '<职位>' --job-url '<岗位链接>' --application-url '<申请链接>' --profile .fanhan-job-agent/profile.json --profile-status .fanhan-job-agent/profile-status.json --career-document .fanhan-job-agent/职业经历.md --proposal .fanhan-job-agent/tailored-proposal.json --resume '.fanhan-job-agent/outbox/<姓名-目标公司-目标岗位-日期-vN.pdf>' --field-name email --field-name phone --final-action '<按钮文字>' --selection .fanhan-job-agent/selected-external-job.json
