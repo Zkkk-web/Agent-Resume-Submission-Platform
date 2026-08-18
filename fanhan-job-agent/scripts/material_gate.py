@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate an evidence-backed proposal and render a job-specific review copy."""
+"""Validate a proposal and render the first candidate-facing resume as editable HTML."""
 
 from __future__ import annotations
 
@@ -144,29 +144,6 @@ def validate(profile: dict, proposal: dict) -> tuple[list[dict], list[dict], dic
     return sections, changes, consultation
 
 
-def render_markdown(job: dict, sections: list[dict], changes: list[dict], consultation: dict) -> str:
-    lines = [f"# {job['company']}｜{job['title']}｜定制申请材料", "", f"岗位 ID：`{job['id']}`", ""]
-    lines.extend(["## 本岗位咨询记录", ""])
-    for question in consultation["questions"]:
-        lines.extend([
-            f"### {question['question']}", "",
-            f"- 回答摘要：{question['answer_summary']}",
-            f"- 用于变更：{'；'.join(question['used_in_change_ids'])}", "",
-        ])
-    for section in sections:
-        lines.extend([f"## {section['heading']}", "", section["content"].strip(), ""])
-    lines.extend(["## JD 依据与变更记录", ""])
-    for change in changes:
-        lines.extend([
-            f"### {change['id']}｜{change['summary']}", "",
-            f"- 类型：`{change['type']}`",
-            f"- JD 依据：{'；'.join(change['jd_basis'])}",
-            f"- 事实证据：{'；'.join(change['fact_evidence'])}",
-            f"- 候选人确认：{change['confirmation']}", "",
-        ])
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def render_html(title: str, sections: list[dict]) -> str:
     body = []
     for section in sections:
@@ -190,19 +167,16 @@ def render(profile_path: Path, proposal_path: Path, output_path: Path) -> None:
     if not original.is_file():
         raise ValueError("原始简历不存在")
     output = output_path.resolve()
-    if output.suffix.lower() not in {".md", ".html"} or ".fanhan-job-agent" not in output.parts:
-        raise ValueError("成稿必须是 .fanhan-job-agent/ 下的新 Markdown 或 HTML 文件")
+    if (output.suffix.lower() != ".html" or output.parent.name != "outbox"
+            or output.parent.parent.name != ".fanhan-job-agent"):
+        raise ValueError("第一份候选人可见成稿必须是 .fanhan-job-agent/outbox/ 下的新 HTML 文件")
     if output == original:
         raise ValueError("成稿不能覆盖原始简历")
     if output.stem != proposal["artifact_stem"]:
         raise ValueError("输出文件名必须与 artifact_stem 一致")
 
     original_hash = sha256(original)
-    rendered = (
-        render_markdown(proposal["job"], sections, changes, consultation)
-        if output.suffix.lower() == ".md"
-        else render_html(output.stem, sections)
-    )
+    rendered = render_html(output.stem, sections)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("x", encoding="utf-8") as stream:
         stream.write(rendered)
@@ -286,6 +260,12 @@ def self_test() -> None:
         page = output.read_text(encoding="utf-8")
         assert "contenteditable=\"true\"" in page and "window.print()" in page
         assert "<title>张三-Example-AI产品经理-20260818-v1</title>" in page
+        markdown = output.with_suffix(".md")
+        try:
+            render(profile_path, proposal_path, markdown)
+            raise AssertionError("第一份成稿不应允许 Markdown 绕过可编辑 HTML")
+        except ValueError as error:
+            assert "HTML" in str(error)
         wrong_name = root / ".fanhan-job-agent" / "outbox" / "张三-Rokid-AI产品经理-20260818-v1.html"
         try:
             render(profile_path, proposal_path, wrong_name)
@@ -304,7 +284,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("profile", nargs="?", help="职业档案 JSON 路径")
     parser.add_argument("proposal", nargs="?", help="定制提案 JSON 路径")
-    parser.add_argument("output", nargs="?", help="独立 Markdown 或 HTML 输出路径")
+    parser.add_argument("output", nargs="?", help=".fanhan-job-agent/outbox/ 下的 HTML 输出路径")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -312,12 +292,18 @@ def main() -> None:
         return
     if not args.profile or not args.proposal or not args.output:
         parser.error("请提供职业档案、定制提案和输出路径")
+    output = Path(args.output).expanduser()
     render(
         Path(args.profile).expanduser().resolve(),
         Path(args.proposal).expanduser().resolve(),
-        Path(args.output).expanduser(),
+        output,
     )
-    print("定制材料已生成；原始简历未修改。HTML 可直接编辑并导出 PDF。")
+    print(json.dumps({
+        "status": "html_ready",
+        "html_path": str(output.resolve()),
+        "next_action": "立即把这个 HTML 作为第一份成稿展示给用户；用户编辑并导出前不得生成或展示 PDF。",
+        "pdf_ready": False,
+    }, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

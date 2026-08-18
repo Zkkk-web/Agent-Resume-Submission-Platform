@@ -103,13 +103,25 @@ def validate_materials(args, selection):
     artifact_stem = str(proposal.get("artifact_stem") or "").strip()
     if not artifact_stem or resume_path.stem != artifact_stem:
         raise ValueError("tailored_resume_name_mismatch")
+    html_path = resume_path.with_suffix(".html")
+    try:
+        html_path = local_path(html_path, outbox=True)
+    except ValueError as error:
+        raise ValueError("editable_html_missing") from error
+    page = html_path.read_text(encoding="utf-8")
+    if 'contenteditable="true"' not in page or "window.print()" not in page:
+        raise ValueError("editable_html_invalid")
     if resume_path.suffix.lower() != ".pdf" or not resume_path.read_bytes()[:4] == b"%PDF":
         raise ValueError("tailored_resume_must_be_pdf")
+    if resume_path.stat().st_mtime_ns < html_path.stat().st_mtime_ns:
+        raise ValueError("pdf_must_be_exported_after_html")
     return {
         "profile_sha256": file_hash(profile_path),
         "profile_status_sha256": file_hash(status_path),
         "career_document_sha256": file_hash(career_path),
         "proposal_sha256": file_hash(proposal_path),
+        "html_sha256": file_hash(html_path),
+        "html_name": html_path.name,
         "resume_sha256": file_hash(resume_path),
         "resume_name": resume_path.name,
     }
@@ -176,9 +188,18 @@ def self_test():
             profile=profile, profile_status=status, career_document=career, proposal=proposal,
             resume=resume, portfolio=None, field_name=["email"], final_action="Submit",
         )
+        try:
+            payload(args)
+            raise AssertionError("只有 PDF、没有同名可编辑 HTML 时必须失败")
+        except ValueError as error:
+            assert str(error) == "editable_html_missing"
+        editable_html = resume.with_suffix(".html")
+        editable_html.write_text('<main contenteditable="true"></main><button onclick="window.print()">导出 PDF</button>', encoding="utf-8")
+        resume.write_bytes(b"%PDF-tailored")
         value = payload(args)
         first = fingerprint(value)
         assert value["resume_name"] == resume.name
+        assert value["html_name"] == editable_html.name
         assert first == fingerprint(dict(value))
         resume.write_bytes(b"%PDF-tailored-v2")
         assert first != fingerprint(payload(args))

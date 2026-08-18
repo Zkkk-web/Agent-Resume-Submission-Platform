@@ -48,7 +48,9 @@
 - [ ] 搜索前已建立 `职业经历.md`、`profile.json` 和有效 `profile-status.json`
 - [ ] 用户看过匹配点、缺口和风险后明确选择岗位
 - [ ] Skill 给出针对该 JD 的简历修改建议，而不是通用建议
-- [ ] 已生成并检查完整的岗位专用 HTML/PDF
+- [ ] 第一份候选人可见成稿是可编辑 HTML，并已在 Codex 侧边栏展示
+- [ ] 用户检查或修改 HTML，并亲自点击“导出 PDF”；Agent 没有另写脚本直接生成 PDF
+- [ ] 已生成并检查完整的岗位专用 HTML/PDF，二者同名且 PDF 不早于 HTML
 - [ ] PDF 名称符合 `姓名-目标公司-目标岗位-YYYYMMDD-vN.pdf`，没有沿用旧目标公司
 - [ ] `.fanhan-job-agent/selected-external-job.json` 与当前公司、职位和链接一致
 - [ ] 全程未打开系统默认浏览器
