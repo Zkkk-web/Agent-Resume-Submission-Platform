@@ -17,7 +17,7 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 
 1. 返回 `$fanhan-job-agent`，确认 `$职业资产` 已生成非空 `.fanhan-job-agent/职业经历.md`、`.fanhan-job-agent/profile.json` 和与当前档案哈希一致的 `profile-status.json`。状态不是 `可匹配` 时停止找岗并补齐最小缺口；不得用原始简历直接开始搜索。
 2. 使用 `scripts/application_log.py duplicate` 检查工作区 `.fanhan-job-agent/external-applications.jsonl`；命中成功记录时跳过，除非用户明确要求重投。
-3. 只在 Codex 内置浏览器搜索 Bonjour、Watcha 和 JobRadar。Bonjour、Watcha 可作为站内申请候选；JobRadar 只负责发现岗位，实际申请应跟随其真实来源站点。不得调用系统默认浏览器。
+3. 只在 Codex 内置浏览器搜索 Bonjour、Watcha 和 JobRadar。由主 Skill 发起默认多来源找岗时，三个来源都必须尝试后再返回，不能找到第一个来源的结果就停止。Bonjour、Watcha 可作为站内申请候选；JobRadar 只负责发现岗位，实际申请应跟随其真实来源站点。不得调用系统默认浏览器。
 4. 展示来源、公司、职位、地点、岗位链接、申请链接、匹配点、缺口和风险。当前打开页面只算环境上下文，绝不等于用户选择。
 5. 用户明确选择单个岗位后，运行 `scripts/confirmation_gate.py select`，把公司、职位、岗位链接、申请链接和选择时间写入 `.fanhan-job-agent/selected-external-job.json`。记录缺失或与当前岗位不一致时，禁止发送个人数据、上传材料或准备提交。
 6. 返回 `$fanhan-job-agent` 执行“选岗后的统一定制流程”：展示匹配点、缺口、风险和具体修改建议；生成与当前公司和职位绑定的完整 HTML 简历；由用户检查并导出同名 PDF。缺少任一产物时不得打开申请表。
