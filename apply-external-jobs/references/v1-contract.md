@@ -11,6 +11,8 @@
 
 默认找岗时，三个外部来源都必须实际尝试后再返回主 Skill。来源需要登录、会员或暂不可用时返回真实状态并继续其他来源；未尝试不能写成无结果。
 
+Watcha 的公开岗位来源是 `https://watcha.cn/jobs-api/v1/public/teams`，查岗页是 `https://watcha.cn/study/jobs`。查岗页为 SPA；初始 HTML 标题或 canonical 可能显示共学营，不能据此判断岗位为空。先验证公开接口中的 `teams/jobs`，接口失败后才检查渲染出的岗位数量或岗位卡片。
+
 ## 选岗门禁
 
 - 搜索前必须存在 `$职业资产` 生成的职业主档，且 `profile-status.json` 与当前 `profile.json` 哈希一致并标记为 `可匹配`。

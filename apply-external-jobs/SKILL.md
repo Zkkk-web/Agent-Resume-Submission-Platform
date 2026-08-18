@@ -26,6 +26,13 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 9. 展示最终摘要，并在交给用户点击前用与 `build` 完全相同的公司、岗位、档案、材料和字段参数运行 `scripts/confirmation_gate.py verify`，再附加 `--expected '<build 返回的 fingerprint>'`。选岗、页面、材料或字段变化时必须停止。V1 最终提交按钮由用户本人点击。
 10. 用户点击后，只凭明确成功文案、申请编号或平台状态记录 `success`；明确失败记为 `failed`；结果含糊或超时记为 `failed: submission_outcome_unknown`，不得自动重试。
 
+## Watcha 读取规则
+
+1. 固定查岗页是 `https://watcha.cn/study/jobs`。该页面是 SPA 路由，初始 HTML 的标题、canonical 和营销文案可能仍显示“AI 产品经理共学营”；这些信息不能作为“没有岗位”的证据。
+2. 优先运行 `python3 <skill-root>/scripts/watcha_jobs.py --query '<求职关键词>' --limit 20`，从观猹岗位页自己使用的公开接口 `https://watcha.cn/jobs-api/v1/public/teams` 读取并标准化岗位。返回有效 `teams/jobs` 后，Watcha 才标记为 `已搜索`。
+3. 接口失败时才降级到内置浏览器，等待渲染后的“X 个在招岗位”或真实岗位卡片。接口和渲染列表都失败时标记 `暂不可用`，不得写成 `无结果`。
+4. 岗位详情链接使用脚本返回的 `job_url`；不要改去产品首页、招聘入口介绍页或旧 VibeKnow 页面判断全部 Watcha 岗位。
+
 ## 硬边界
 
 - 不绕过验证码，不保存密码、Cookie、Token 或登录态。
@@ -40,6 +47,7 @@ description: 在 Codex 内置浏览器中从 Bonjour、Watcha 和 JobRadar 探�
 
 ```bash
 python3 scripts/confirmation_gate.py select --company '<公司>' --job-title '<职位>' --job-url '<岗位链接>' --application-url '<申请链接>' --output .fanhan-job-agent/selected-external-job.json --confirmed
+python3 scripts/watcha_jobs.py --query '<求职关键词>' --limit 20
 python3 scripts/application_log.py duplicate --job-url '<岗位链接>' --application-url '<申请链接>'
 python3 scripts/confirmation_gate.py build --company '<公司>' --job-title '<职位>' --job-url '<岗位链接>' --application-url '<申请链接>' --profile .fanhan-job-agent/profile.json --profile-status .fanhan-job-agent/profile-status.json --career-document .fanhan-job-agent/职业经历.md --proposal .fanhan-job-agent/tailored-proposal.json --resume '.fanhan-job-agent/outbox/<姓名-目标公司-目标岗位-日期-vN.pdf>' --field-name email --field-name phone --final-action '<按钮文字>' --selection .fanhan-job-agent/selected-external-job.json
 python3 scripts/confirmation_gate.py verify --company '<公司>' --job-title '<职位>' --job-url '<岗位链接>' --application-url '<申请链接>' --profile .fanhan-job-agent/profile.json --profile-status .fanhan-job-agent/profile-status.json --career-document .fanhan-job-agent/职业经历.md --proposal .fanhan-job-agent/tailored-proposal.json --resume '.fanhan-job-agent/outbox/<姓名-目标公司-目标岗位-日期-vN.pdf>' --field-name email --field-name phone --final-action '<按钮文字>' --selection .fanhan-job-agent/selected-external-job.json --expected '<build 返回的 fingerprint>'
