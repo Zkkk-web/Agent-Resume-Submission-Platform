@@ -5,7 +5,7 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 # 泛函求职 Agent
 
-首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md) 和 [本地职业档案契约](references/profile-schema.md)，并确认 `$职业资产` 可用；缺少该依赖时停止找岗并明确说明安装问题，不能用浅层摘要冒充职业资产。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。生成岗位定制稿时读取 [JD 定制材料契约](references/tailored-material-schema.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
+首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md) 和 [本地职业档案契约](references/profile-schema.md)，并确认 `$职业资产` 可用；缺少该依赖时停止找岗并明确说明安装问题，不能用浅层摘要冒充职业资产。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。生成岗位定制稿时读取 [JD 定制材料契约](references/tailored-material-schema.md)。遇到申请表自由文本问题时读取 [申请回答库](references/application-answer-library.md)；候选人要求面试辅导或确认进入面试阶段时读取 [轻量面试辅导](references/interview-coaching.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
 
 ## 对话风格
 
@@ -42,12 +42,12 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 泛函岗位和外部岗位都必须经过本节，不能从原始简历直接进入申请页。
 
-1. 把用户明确选择的单个岗位及完整 JD 写入 `.fanhan-job-agent/job.json`，并用 `match_guard.py` 检查用户明确限制。
-2. 先向用户展示四类针对性结论：匹配点、明显缺口、申请风险、建议重点修改的经历或表达。不能只给岗位链接或笼统匹配分。
+1. 把用户明确选择的单个岗位及完整 JD 写入 `.fanhan-job-agent/job.json`，并用 `match_guard.py` 检查用户明确限制。`not_recommended` 时停止推荐；`needs_review` 时逐项展示未知条件，不能静默当成通过。
+2. 先向用户展示四类针对性结论：匹配点、明显缺口、申请风险、建议重点修改的经历或表达。申请页或 JD 出现学历、经验年限、工作许可、到岗时间或薪资淘汰题时，用职业档案中的已确认事实预检；明确冲突就提醒可能被系统淘汰，未知就询问候选人，最终是否继续由候选人决定。不能只给岗位链接或笼统匹配分。
 3. 无论职业主档看起来是否完整，都要结合当前 JD 和候选人真实经历追问 1–2 个最可能提高面试机会的问题，一次只问一个。问题必须指向 JD 的具体要求和主档中的具体经历；候选人确认后，把答案同步更新到 `职业经历.md`、`profile.json` 和 `profile-status.json`。
 4. 生成 `.fanhan-job-agent/tailored-proposal.json`，并记录已完成的 `consultation.questions`。每个问题必须通过 `used_in_change_ids` 进入至少一项简历变更；不能只做改写或排序却丢掉本轮确认的内容。`sections` 必须组成一份完整简历，每项调整都关联 JD 依据和候选人事实证据；新增或改变事实必须逐项确认。
 5. 文件名必须是 `姓名-目标公司-目标岗位-YYYYMMDD-vN`，不得继承原简历中的旧目标公司。先运行 `material_gate.py` 生成同名 Markdown 审核稿，再生成 `.fanhan-job-agent/outbox/<文件名>.html`。
-6. 向用户提供 HTML 链接。用户可以直接修改并点击“导出 PDF”；导出的 PDF 必须保存为 `.fanhan-job-agent/outbox/<同一文件名>.pdf`。原始简历只读。
+6. 向用户提供 HTML 链接。用户可以直接修改并点击“导出 PDF”；导出的 PDF 必须保存为 `.fanhan-job-agent/outbox/<同一文件名>.pdf`。按 [JD 定制材料契约](references/tailored-material-schema.md) 检查视觉版式和 PDF 文本层；无法验证文本层时如实标记，不能宣称已通过 ATS。原始简历只读。
 7. 用户确认岗位专用 PDF 后，把它记录为 `profile.application_resume.path`。没有当前岗位的建议、提案、HTML 和已检查 PDF 时，禁止进入工作台提交或 `$apply-external-jobs` 的申请步骤。
 
 ## 泛函岗位流程
@@ -79,8 +79,23 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 - 最终提交按钮必须由用户本人检查后点击。点击后 Agent 读取明确结果并写入最小投递记录；结果不明时记为未知，不自动重试。托管代投留到后续版本。
 - 不绕过验证码，不保存密码、Cookie 或登录态，不在结果不明时自动重试。
 
+## 申请回答库
+
+1. 申请表出现开放题时读取 [申请回答库](references/application-answer-library.md)，先查找相似历史问题；命中时展示原公司、岗位和答案，让候选人选择沿用、针对当前 JD 改写或重新回答。
+2. 历史答案只是草稿来源，不能因为相似就直接填表。动机题默认针对当前公司重写；工作许可、薪资和到岗时间必须以当前档案为准。
+3. 新答案只使用 `职业经历.md`、当前 JD 和候选人明确回答中的事实。新增事实先写回 `$职业资产`，再由候选人确认最终答案。
+4. 只有候选人明确确认的答案才运行 `candidate_memory.py add-answer --confirmed` 写入 `.fanhan-job-agent/candidate-memory.json`。该文件不得进入外部投递日志、Git、工作台或飞书群。
+
+## 轻量面试辅导
+
+1. 面试辅导是可选投后能力，不得阻塞找岗和投递。候选人主动要求，或确认进入面试阶段时才读取 [轻量面试辅导](references/interview-coaching.md)。
+2. 从长期职业主档建立经候选人确认的 STAR 故事库；团队成果与个人贡献必须分开，缺失结果不补造。
+3. 模拟时根据当前 JD 一次只问一个问题，必要时最多追问两次。按内容证据、表达结构、岗位相关性、可信度和个人差异性评分，只给一个最优先改进动作。
+4. 真实面试后可以记录问题、实际回答、面试官追问和候选人自评；练习分数只用于观察表达变化，不解释为录取概率。
+5. 当前版本不做录音处理、复杂评分校准、薪资谈判或 Offer 对比；不复制第三方面试 Skill 的完整状态机。
+
 ## 当前交付边界
 
-- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、可审计定制稿、可编辑 HTML、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、Codex 安装和 WorkBuddy 启动烟测。
+- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、投递前淘汰题预检、可审计定制稿、可编辑 HTML、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、可复用申请回答库、轻量面试故事库与模拟复盘、Codex 安装和 WorkBuddy 启动烟测。
 - 后续 Issue 覆盖：三名真实候选人验收与 Bonjour 侧边栏投递预演。
 - 在真实验收完成前，不得宣称已完成稳定外部代投。

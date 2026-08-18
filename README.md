@@ -8,11 +8,15 @@ V1 对用户只有一个入口，内部依赖职业资产与外部网站安全�
 
 V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先建立职业档案；用户选岗后获得针对性建议和岗位专用简历。可编辑 HTML 的文件名绑定候选人、目标公司和岗位，用户检查后导出同名 PDF。文字字段在浏览器能力可靠时预填，文件上传不稳定时由用户把专用 PDF 拖到右侧申请页。用户亲自点击最终提交，Agent 再记录结果。托管代投不属于三天版。
 
+申请表出现开放题时，主 Skill 会优先查找本地已确认回答，展示原公司和岗位后由候选人决定沿用、改写或重答；答案只保存在 `.fanhan-job-agent/candidate-memory.json`，不进入外部投递日志或工作台。候选人进入面试阶段后，可复用同一职业资产建立故事库、逐题模拟和复盘记录。当前不接入独立 Chrome、Playwright 或自动提交。
+
 默认找岗不区分“先泛函、后外部”：用户没有限定来源时，同一轮必须尝试泛函工作台、Bonjour、Watcha 和 JobRadar，再统一展示。来源需要登录、会员或暂不可用时明确标记并继续其他来源，不能悄悄省略。
 
 当前打开的招聘页面不代表用户选择。V1 在发送个人数据前必须先展示匹配点、缺口和风险，由用户明确选择单个岗位，并生成与公司、职位和链接绑定的本地选岗记录；记录缺失或不一致时流程停止。
 
 Issue #25 的只读探测已把 Bonjour 选为首个直接投递候选，Watcha 为第二顺位，JobRadar 只作岗位发现源。详细证据见 [外部招聘网站可行性探测](docs/external-site-feasibility-issue-08.md)。在 Codex 侧边栏完成真实预演前，不增加站点适配器抽象。
+
+第三方项目只借鉴设计，不复制代码；来源、许可证和取舍见 [第三方求职 Skill 借鉴记录](docs/third-party-feature-audit.md)。
 
 外部岗位发现统一运行 `apply-external-jobs/scripts/external_jobs.py`：Bonjour 读取公开职位页随页面返回的岗位数据，Watcha 读取其公开 feed，JobRadar 准确返回免费预览/会员限制。浏览器只负责选岗后的详情、登录和申请，不再用页面加载是否超时判断整个平台可用性。
 
@@ -46,6 +50,7 @@ python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
 python3 fanhan-job-agent/scripts/material_gate.py --self-test
+python3 fanhan-job-agent/scripts/candidate_memory.py self-test
 python3 fanhan-job-agent/scripts/workbench_client.py self-test
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" apply-external-jobs
