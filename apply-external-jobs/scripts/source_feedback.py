@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 DEFAULT_STATE = Path(".fanhan-job-agent/source-suggestion.json")
 DEFAULT_QUEUE = Path(".fanhan-job-agent/source-suggestions.jsonl")
+DEFAULT_ENDPOINT = "https://fanhan-source-feedback.zeabur.app/source-feedback"
 
 
 def valid_url(value: str) -> str:
@@ -101,7 +102,7 @@ def main() -> None:
     send = commands.add_parser("send")
     send.add_argument("--state", type=Path, default=DEFAULT_STATE)
     send.add_argument("--queue", type=Path, default=DEFAULT_QUEUE)
-    send.add_argument("--endpoint", default=os.environ.get("FANHAN_SOURCE_FEEDBACK_URL", ""))
+    send.add_argument("--endpoint", default=os.environ.get("FANHAN_SOURCE_FEEDBACK_URL", DEFAULT_ENDPOINT))
     send.add_argument("--confirmed", action="store_true", required=True)
     commands.add_parser("self-test")
     args = parser.parse_args()
