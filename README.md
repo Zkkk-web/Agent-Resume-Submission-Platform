@@ -2,8 +2,8 @@
 
 V1 对用户只有一个入口，内部依赖职业资产与外部网站安全骨架：
 
-- `fanhan-job-agent`：调用 `$职业资产` 建立长期档案，默认同时搜索泛函、Bonjour、Watcha 和 JobRadar，统一去重和排序；选岗后生成岗位专用简历，并在候选人明确授权后辅助申请。
-- `apply-external-jobs`：处理 Bonjour、Watcha 和 JobRadar 的岗位发现、选岗门禁、表单辅助与最小本地记录。
+- `fanhan-job-agent`：调用 `$职业资产` 建立长期档案，先从 63 条已核对来源快照中筛选 3–5 个渠道，经用户确认后再搜索泛函与外部来源；选岗后生成岗位专用简历，并在候选人明确授权后辅助申请。
+- `apply-external-jobs`：处理来源筛选、Bonjour/Watcha/JobRadar 的结构化岗位发现、其他已确认网站的定向探索、选岗门禁、表单辅助与最小本地记录。
 - `apply-jobradar`：仅兼容旧 Prompt，并转交上面两个 Skill，不维护独立逻辑。
 
 V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先建立职业档案；用户选岗后获得针对性建议和岗位专用简历。针对性提问结束后，第一份候选人可见成稿必须是绑定候选人、目标公司和岗位的可编辑 HTML，并立即在 Codex 侧边栏展示；页面在本地自动保存文字修改，并读取当前页面直接导出同名 A4 PDF，不依赖系统打印窗口。用户检查、修改并亲自导出后才能进入申请。Agent 先扫描完整申请表，可靠字段预填后重新读取复核；只要存在人工步骤，就一次性整理所有字段的值和状态供用户复制或上传。外部申请提交、失败或放弃后先取得泛函入库授权，核验工作台与飞书通知，再只提示可选面试辅助。托管代投不属于三天版。
@@ -12,7 +12,9 @@ V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先�
 
 每个候选人目录另有两个互不混写的 Markdown：`用户求职记忆.md` 保存候选人确认的求职偏好，`Agent平台执行记忆.md` 保存招聘网站故障、解决办法和复用条件。`职业经历.md` 仍是职业事实主档，三者用途不同。
 
-默认找岗不区分“先泛函、后外部”：用户没有限定来源时，同一轮必须尝试泛函工作台、Bonjour、Watcha 和 JobRadar，再统一展示。来源需要登录、会员或暂不可用时明确标记并继续其他来源，不能悄悄省略。
+默认找岗不区分“先泛函、后外部”：同一轮读取泛函岗位，并从内置来源快照中推荐 3–5 个外部渠道。用户确认后才访问这些网站，再统一展示和排序；这避免一次打开几十个页面造成 Token 浪费。来源需要登录、会员或暂不可用时明确标记并继续其他已确认来源。
+
+来源快照位于 `apply-external-jobs/data/job-source-catalog.json`，由泛函内部多维表格导出；公开 Skill 运行时不读取私有飞书表格。用户分享快照之外的网站时，Skill 只整理网站信息并再次询问是否愿意交给泛函，不发送候选人材料。未配置 `FANHAN_SOURCE_FEEDBACK_URL` 时建议保存在本地待发送队列，不能宣称已经进入飞书。
 
 当前打开的招聘页面不代表用户选择。V1 在发送个人数据前必须先展示匹配点、缺口和风险，由用户明确选择单个岗位，并生成与公司、职位和链接绑定的本地选岗记录；记录缺失或不一致时流程停止。
 
@@ -49,6 +51,8 @@ python3 apply-external-jobs/scripts/application_log.py self-test
 python3 apply-external-jobs/scripts/confirmation_gate.py self-test
 python3 apply-external-jobs/scripts/external_jobs.py --self-test
 python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
+python3 apply-external-jobs/scripts/source_catalog.py --self-test
+python3 apply-external-jobs/scripts/source_feedback.py self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
 python3 fanhan-job-agent/scripts/material_gate.py --self-test
