@@ -2,7 +2,7 @@
 
 日期：2026-08-18。对应 Issue #42。
 
-本次只借鉴公开工作流和数据设计，未复制第三方代码、提示词正文、品牌名称或浏览器程序。
+求职工作流部分只借鉴公开设计，未复制第三方 Skill 代码、提示词正文、品牌名称或浏览器程序。
 
 | 来源 | 许可证 | 借鉴点 | 本仓库实现 |
 |---|---|---|---|
@@ -11,6 +11,12 @@
 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | MIT | 多来源独立读取、统一状态、单来源失败不阻塞 | 现有 `external_jobs.py` 已覆盖三个外部来源，不新增通用适配器框架 |
 | [Paramchoudhary/ResumeSkills](https://github.com/Paramchoudhary/ResumeSkills) | MIT | 表单答案按问题类型生成 | 复用现有职业资产和 JD 定制流程，只补回答复用，不安装其 20 个独立 Skill |
 | [GresonKwan/JobOK](https://github.com/GresonKwan/JobOK) | MIT | 中文求职边界、用户手动确认外部动作 | 现有确认门禁已经覆盖，不复制重复流程 |
+
+## 页面内 PDF 运行依赖
+
+- `html2pdf.js` 0.14.0：MIT；把候选人在本地 HTML 中修改后的当前页面转换为 PDF。
+- 使用官方已修复 2026 年 XSS 公告的 0.14.0 版本；依赖包和完整许可证保存在 `fanhan-job-agent/assets/`。
+- 转换完全在候选人本地页面内进行，不向第三方上传简历内容，也不在运行时访问 CDN。
 
 ## 明确排除
 

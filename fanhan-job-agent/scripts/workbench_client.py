@@ -69,7 +69,11 @@ def validate_pdf(path: Path) -> tuple[str, int]:
     if not html_path.is_file():
         raise ValueError("缺少同名可编辑 HTML；禁止跳过 HTML 直接上传 PDF")
     page = html_path.read_text(encoding="utf-8")
-    if 'contenteditable="true"' not in page or "window.print()" not in page:
+    if ('contenteditable="true"' not in page
+            or 'data-fanhan-resume-editor="v2"' not in page
+            or "html2pdf.bundle.min.js" not in page
+            or "resume-editor.js" not in page
+            or "window.print()" in page):
         raise ValueError("同名 HTML 不是可编辑、可导出的简历")
     size = path.stat().st_size
     with path.open("rb") as stream:
@@ -348,7 +352,8 @@ def self_test() -> None:
         tailored_resume = root / ".fanhan-job-agent" / "outbox" / "张三-Example-AI产品经理-20260818-v1.pdf"
         tailored_resume.parent.mkdir(parents=True, exist_ok=True)
         tailored_resume.with_suffix(".html").write_text(
-            '<main contenteditable="true"></main><button onclick="window.print()">导出 PDF</button>',
+            '<body data-fanhan-resume-editor="v2"><main contenteditable="true"></main>'
+            '<script src="html2pdf.bundle.min.js"></script><script src="resume-editor.js"></script></body>',
             encoding="utf-8",
         )
         tailored_resume.write_bytes(b"%PDF-tailored")
