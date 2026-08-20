@@ -109,7 +109,11 @@ def validate_materials(args, selection):
     except ValueError as error:
         raise ValueError("editable_html_missing") from error
     page = html_path.read_text(encoding="utf-8")
-    if 'contenteditable="true"' not in page or "window.print()" not in page:
+    if ('contenteditable="true"' not in page
+            or 'data-fanhan-resume-editor="v2"' not in page
+            or "html2pdf.bundle.min.js" not in page
+            or "resume-editor.js" not in page
+            or "window.print()" in page):
         raise ValueError("editable_html_invalid")
     if resume_path.suffix.lower() != ".pdf" or not resume_path.read_bytes()[:4] == b"%PDF":
         raise ValueError("tailored_resume_must_be_pdf")
@@ -194,7 +198,11 @@ def self_test():
         except ValueError as error:
             assert str(error) == "editable_html_missing"
         editable_html = resume.with_suffix(".html")
-        editable_html.write_text('<main contenteditable="true"></main><button onclick="window.print()">导出 PDF</button>', encoding="utf-8")
+        editable_html.write_text(
+            '<body data-fanhan-resume-editor="v2"><main contenteditable="true"></main>'
+            '<script src="html2pdf.bundle.min.js"></script><script src="resume-editor.js"></script></body>',
+            encoding="utf-8",
+        )
         resume.write_bytes(b"%PDF-tailored")
         value = payload(args)
         first = fingerprint(value)

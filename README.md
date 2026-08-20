@@ -6,7 +6,7 @@ V1 对用户只有一个入口，内部依赖职业资产与外部网站安全�
 - `apply-external-jobs`：处理 Bonjour、Watcha 和 JobRadar 的岗位发现、选岗门禁、表单辅助与最小本地记录。
 - `apply-jobradar`：仅兼容旧 Prompt，并转交上面两个 Skill，不维护独立逻辑。
 
-V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先建立职业档案；用户选岗后获得针对性建议和岗位专用简历。针对性提问结束后，第一份候选人可见成稿必须是绑定候选人、目标公司和岗位的可编辑 HTML，并立即在 Codex 侧边栏展示；用户检查、修改并亲自导出同名 PDF 后才能进入申请。Agent 先扫描完整申请表，可靠字段预填后重新读取复核；只要存在人工步骤，就一次性整理所有字段的值和状态供用户复制或上传。外部申请提交、失败或放弃后先取得泛函入库授权，核验工作台与飞书通知，再只提示可选面试辅助。托管代投不属于三天版。
+V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先建立职业档案；用户选岗后获得针对性建议和岗位专用简历。针对性提问结束后，第一份候选人可见成稿必须是绑定候选人、目标公司和岗位的可编辑 HTML，并立即在 Codex 侧边栏展示；页面在本地自动保存文字修改，并读取当前页面直接导出同名 A4 PDF，不依赖系统打印窗口。用户检查、修改并亲自导出后才能进入申请。Agent 先扫描完整申请表，可靠字段预填后重新读取复核；只要存在人工步骤，就一次性整理所有字段的值和状态供用户复制或上传。外部申请提交、失败或放弃后先取得泛函入库授权，核验工作台与飞书通知，再只提示可选面试辅助。托管代投不属于三天版。
 
 申请表出现开放题时，主 Skill 会优先查找本地已确认回答，展示原公司和岗位后由候选人决定沿用、改写或重答；答案只保存在 `.fanhan-job-agent/candidate-memory.json`，不进入外部投递日志或工作台。候选人进入面试阶段后，可复用同一职业资产建立故事库、逐题模拟和复盘记录。当前不接入独立 Chrome、Playwright 或自动提交。
 
@@ -50,6 +50,7 @@ python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
 python3 fanhan-job-agent/scripts/material_gate.py --self-test
+node fanhan-job-agent/assets/resume-editor.js --self-test
 python3 fanhan-job-agent/scripts/candidate_memory.py self-test
 python3 fanhan-job-agent/scripts/workbench_client.py self-test
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
