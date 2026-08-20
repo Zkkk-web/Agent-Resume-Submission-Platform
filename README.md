@@ -2,7 +2,7 @@
 
 V1 对用户只有一个入口，内部依赖职业资产与外部网站安全骨架：
 
-- `fanhan-job-agent`：调用 `$职业资产` 建立长期档案，先从 63 条已核对来源快照中筛选 3–5 个渠道，经用户确认后再搜索泛函与外部来源；选岗后生成岗位专用简历，并在候选人明确授权后辅助申请。
+- `天才职业顾问`（技术标识 `fanhan-job-agent`）：调用 `$职业资产` 建立长期档案，先从 63 条已核对来源快照中筛选 3–5 个渠道，经用户确认后再搜索泛函与外部来源；选岗后生成岗位专用简历，并在候选人明确授权后辅助申请。
 - `apply-external-jobs`：处理来源筛选、Bonjour/Watcha/JobRadar 的结构化岗位发现、其他已确认网站的定向探索、选岗门禁、表单辅助与最小本地记录。
 - `apply-jobradar`：仅兼容旧 Prompt，并转交上面两个 Skill，不维护独立逻辑。
 
@@ -36,7 +36,7 @@ cp -R apply-external-jobs "${CODEX_HOME:-$HOME/.codex}/skills/apply-external-job
 cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
 ```
 
-安装后在 Codex 中说：
+安装后在界面选择“天才职业顾问”，或在 Codex 中说：
 
 ```text
 使用 $fanhan-job-agent 帮我找适合的工作，这是我的简历。
