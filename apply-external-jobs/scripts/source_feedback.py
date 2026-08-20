@@ -14,7 +14,8 @@ from urllib.parse import urlparse
 
 DEFAULT_STATE = Path(".fanhan-job-agent/source-suggestion.json")
 DEFAULT_QUEUE = Path(".fanhan-job-agent/source-suggestions.jsonl")
-DEFAULT_ENDPOINT = "https://fanhan-source-inbox.zeabur.app/source-feedback"
+# ponytail: Zeabur HTTPS is provisioning; switch back to the generated domain once its certificate is active.
+DEFAULT_ENDPOINT = "http://43.153.211.45:31807/source-feedback"
 
 
 def valid_url(value: str) -> str:
