@@ -14,7 +14,7 @@ V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先�
 
 默认找岗不区分“先泛函、后外部”：同一轮读取泛函岗位，并从内置来源快照中推荐 3–5 个外部渠道。用户确认后才访问这些网站，再统一展示和排序；这避免一次打开几十个页面造成 Token 浪费。来源需要登录、会员或暂不可用时明确标记并继续其他已确认来源。
 
-来源快照位于 `apply-external-jobs/data/job-source-catalog.json`，由泛函内部多维表格导出；公开 Skill 运行时不读取私有飞书表格。用户分享快照之外的网站时，Skill 只整理网站信息并再次询问是否愿意交给泛函，不发送候选人材料。未配置 `FANHAN_SOURCE_FEEDBACK_URL` 时建议保存在本地待发送队列，不能宣称已经进入飞书。
+来源快照位于 `apply-external-jobs/data/job-source-catalog.json`，由泛函内部多维表格导出；公开 Skill 运行时不读取私有飞书表格。用户分享快照之外的网站时，Skill 只整理网站信息并再次询问是否愿意交给泛函，不发送候选人材料。独立的 `source-feedback-relay` 将授权后的建议直接推送到“候选人网站建议”飞书群，不经过工作台或数据库；未配置或发送失败时只保存在本地待发送队列，不能宣称已经进入飞书。
 
 当前打开的招聘页面不代表用户选择。V1 在发送个人数据前必须先展示匹配点、缺口和风险，由用户明确选择单个岗位，并生成与公司、职位和链接绑定的本地选岗记录；记录缺失或不一致时流程停止。
 
@@ -53,6 +53,7 @@ python3 apply-external-jobs/scripts/external_jobs.py --self-test
 python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
 python3 apply-external-jobs/scripts/source_catalog.py --self-test
 python3 apply-external-jobs/scripts/source_feedback.py self-test
+python3 source-feedback-relay/server.py --self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
 python3 fanhan-job-agent/scripts/material_gate.py --self-test
