@@ -15,9 +15,9 @@ description: 从 Bonjour、Watcha 和 JobRadar 探索岗位，并在 Codex 内�
 
 ## 工作流
 
-1. 返回 `$fanhan-job-agent`，确认 `$职业资产` 已生成非空 `.fanhan-job-agent/职业经历.md`、`.fanhan-job-agent/profile.json` 和与当前档案哈希一致的 `profile-status.json`。状态不是 `可匹配` 时停止找岗并补齐最小缺口；不得用原始简历直接开始搜索。
+1. 返回 `$fanhan-job-agent`，确认 `$职业资产` 已生成非空 `.fanhan-job-agent/职业经历.md`、`.fanhan-job-agent/profile.json` 和与当前档案哈希一致的 `profile-status.json`，并已分别建立 `.fanhan-job-agent/用户求职记忆.md` 与 `.fanhan-job-agent/Agent平台执行记忆.md`。状态不是 `可匹配` 时停止找岗并补齐最小缺口；不得用原始简历直接开始搜索。
 2. 使用 `scripts/application_log.py duplicate` 检查工作区 `.fanhan-job-agent/external-applications.jsonl`；命中成功记录时跳过，除非用户明确要求重投。
-3. 优先运行 `python3 <skill-root>/scripts/external_jobs.py --query '<求职关键词>' --limit 20`，一次读取 Bonjour、Watcha 和 JobRadar 的结构化状态。岗位发现不得依赖浏览器渲染；单一来源失败不得阻塞其他来源。Bonjour、Watcha 可作为站内申请候选；JobRadar 未获得合作 API 前必须如实标记免费预览或会员限制，不得绕过。不得调用系统默认浏览器。
+3. 先读取 `Agent平台执行记忆.md` 中与 Bonjour、Watcha 和 JobRadar 相关的记录，再运行 `python3 <skill-root>/scripts/external_jobs.py --query '<求职关键词>' --limit 20`，一次读取三个来源的结构化状态。岗位发现不得依赖浏览器渲染；单一来源失败不得阻塞其他来源。Bonjour、Watcha 可作为站内申请候选；JobRadar 未获得合作 API 前必须如实标记免费预览或会员限制，不得绕过。不得调用系统默认浏览器。
 4. 展示来源、公司、职位、地点、岗位链接、申请链接、匹配点、缺口和风险。当前打开页面只算环境上下文，绝不等于用户选择。
 5. 用户明确选择单个岗位后，运行 `scripts/confirmation_gate.py select`，把公司、职位、岗位链接、申请链接和选择时间写入 `.fanhan-job-agent/selected-external-job.json`。记录缺失或与当前岗位不一致时，禁止发送个人数据、上传材料或准备提交。
 6. 返回 `$fanhan-job-agent` 执行“选岗后的统一定制流程”：展示匹配点、缺口、风险和具体修改建议；第一份候选人可见成稿必须是与当前公司和职位绑定的完整可编辑 HTML，并立即在 Codex 侧边栏展示。用户检查、修改并亲自导出同名 PDF 后才能继续；不得调用其他脚本直接生成 PDF，缺少任一产物时不得打开申请表。
@@ -25,6 +25,7 @@ description: 从 Bonjour、Watcha 和 JobRadar 探索岗位，并在 Codex 内�
 8. 开放题返回 `$fanhan-job-agent` 查询本地申请回答库；相似历史答案必须经候选人选择沿用、改写或重答，最终确认后才能预填和写回回答库。能可靠预填的文字字段尽量填写；每次填写后必须重新读取页面确认值仍在，不能仅凭点击或输入动作宣称“已填好”。被页面清空、无法读取或无法验证的字段都按未填处理。只要有字段需要人工填写，就一次性给出完整“手工填写清单”，覆盖本次盘点到的所有字段，必填项在前；每项写清 `字段名｜值/答案｜状态（已填并复核/请复制/待用户回答/请上传/无需填写）`，并在开头汇总 `共检测 N 项，已填并复核 X 项，请复制 Y 项，待回答 Z 项，请上传 W 项`。不得只列邮箱、手机号等部分字段，也不得用“其余已填好”代替复核结果。文件选择器不稳定时，在同一清单中给出门禁通过的岗位专用 PDF 链接，请用户拖到右侧申请页。
 9. 展示最终摘要，并在交给用户点击前用与 `build` 完全相同的公司、岗位、档案、材料和字段参数运行 `scripts/confirmation_gate.py verify`，再附加 `--expected '<build 返回的 fingerprint>'`。选岗、页面、材料或字段变化时必须停止。V1 最终提交按钮由用户本人点击。
 10. 用户点击后，只凭明确成功文案、申请编号或平台状态记录 `success`；明确失败记为 `failed`；结果含糊或超时记为 `failed: submission_outcome_unknown`，不得自动重试。用户决定不提交时记录 `user_declined`。写入任一终态后立即返回 `$fanhan-job-agent` 执行“统一进入泛函业务”；不得直接启动面试辅助。
+11. 任何来源或申请页出现新的失败、恢复或行为变化后，返回 `$fanhan-job-agent` 按本地双记忆契约更新 `Agent平台执行记忆.md`；只记录平台技术事实，不记录候选人资料和登录凭据。
 
 ## 外部来源读取规则
 

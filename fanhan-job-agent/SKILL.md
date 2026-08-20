@@ -5,7 +5,7 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 # 泛函求职 Agent
 
-首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md) 和 [本地职业档案契约](references/profile-schema.md)，并确认 `$职业资产` 可用；缺少该依赖时停止找岗并明确说明安装问题，不能用浅层摘要冒充职业资产。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。生成岗位定制稿时读取 [JD 定制材料契约](references/tailored-material-schema.md)。遇到申请表自由文本问题时读取 [申请回答库](references/application-answer-library.md)；候选人要求面试辅导或确认进入面试阶段时读取 [轻量面试辅导](references/interview-coaching.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
+首次启动先读取 [隐私与本地存储](references/privacy-and-storage.md)、[本地职业档案契约](references/profile-schema.md) 和 [本地双记忆契约](references/local-memory.md)，并确认 `$职业资产` 可用；缺少该依赖时停止找岗并明确说明安装问题，不能用浅层摘要冒充职业资产。准备连接泛函岗位或提交材料时，再读取 [工作台公开接口](references/workbench-public-api.md)。生成岗位定制稿时读取 [JD 定制材料契约](references/tailored-material-schema.md)。遇到申请表自由文本问题时读取 [申请回答库](references/application-answer-library.md)；候选人要求面试辅导或确认进入面试阶段时读取 [轻量面试辅导](references/interview-coaching.md)。WorkBuddy 安装验收时读取 [WorkBuddy 烟测](references/workbuddy-smoke-test.md)。
 
 ## 对话风格
 
@@ -18,9 +18,11 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 1. 先说明：原始材料默认只在当前本地环境处理；用户明确授权前，不向泛函或招聘网站上传简历、联系方式和作品集。
 2. 请用户提供原始简历路径。作品集、GitHub、个人网站和其他职业证据均为可选，不因缺少这些链接阻止材料整理或泛函入库。
 3. 核验文件真实存在且可读。接受 PDF 或 DOCX：DOCX 可先转换为本地参考 PDF，但必须写入 `.fanhan-job-agent/source/`，不得放入待投递的 `outbox/`。原文件保持不变。
-4. **每位候选人都必须调用 `$职业资产`**：先读现有材料并生成或更新 `.fanhan-job-agent/职业经历.md`，再把机器可读索引写入 `.fanhan-job-agent/profile.json`。随后围绕材料中最有潜力的一段经历，依次补齐代表性成果、个人贡献、困难与判断、结果证据、学习与成长五个维度。一次只问一个；材料已有答案时先给出提取摘要让候选人确认或纠正，不能直接跳过或代替确认。确认内容写回长期主档和 `career_consultation`。
-5. 运行 `python3 <skill-root>/scripts/profile_status.py .fanhan-job-agent/profile.json --output .fanhan-job-agent/profile-status.json`。状态不是 `可匹配` 时，每轮只询问返回的一个 `next_questions`，得到回答后更新职业主档并重新检查；**状态变为可匹配前禁止搜索岗位**。
-6. 未提供的信息写为“未知”，不得用当前城市推断期望地点、远程意愿或搬迁意愿。保留原始文件，不覆盖原简历；不要把 `.fanhan-job-agent/`、候选人材料或本地会话标识提交到 Git。
+4. 运行 `python3 <skill-root>/scripts/local_memory.py --directory .fanhan-job-agent`，确保 `.fanhan-job-agent/用户求职记忆.md` 和 `.fanhan-job-agent/Agent平台执行记忆.md` 已分别存在；不得把两类内容写进同一文件。
+5. **每位候选人都必须调用 `$职业资产`**：先读现有材料并生成或更新 `.fanhan-job-agent/职业经历.md`，再把机器可读索引写入 `.fanhan-job-agent/profile.json`。随后围绕材料中最有潜力的一段经历，依次补齐代表性成果、个人贡献、困难与判断、结果证据、学习与成长五个维度。一次只问一个；材料已有答案时先给出提取摘要让候选人确认或纠正，不能直接跳过或代替确认。确认内容写回长期主档和 `career_consultation`。
+6. 将候选人明确确认的目标岗位、地点、办公方式、工作类型、到岗时间、公司偏好、排除项和渠道偏好同步写入 `用户求职记忆.md`；未知信息保持未知。硬限制仍以 `profile.json` 为机器可读依据，两处冲突时先确认再同步修正。
+7. 运行 `python3 <skill-root>/scripts/profile_status.py .fanhan-job-agent/profile.json --output .fanhan-job-agent/profile-status.json`。状态不是 `可匹配` 时，每轮只询问返回的一个 `next_questions`，得到回答后更新职业主档并重新检查；**状态变为可匹配前禁止搜索岗位**。
+8. 未提供的信息写为“未知”，不得用当前城市推断期望地点、远程意愿或搬迁意愿。保留原始文件，不覆盖原简历；不要把 `.fanhan-job-agent/`、候选人材料或本地会话标识提交到 Git。
 
 ## 档案与追问
 
@@ -32,11 +34,13 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 ## 默认多来源找岗
 
+0. 搜索前读取 `用户求职记忆.md` 和 `Agent平台执行记忆.md`：前者用于缩小岗位和渠道范围，后者用于避开已知失败路径。用户记忆不能覆盖 `profile.json` 的硬限制；Agent 记忆不能作为候选人事实。
 1. 用户只说“帮我找工作”“找适合的岗位”等而没有限定来源时，默认来源必须同时包含：泛函工作台、Bonjour、Watcha 和 JobRadar。读取泛函开放岗位，并调用 `$apply-external-jobs` 尝试三个外部来源；不能在获得泛函结果后提前结束本轮找岗。
 2. 只有用户明确说“只看泛函”“只看 Bonjour”等时才缩小来源。外部来源统一调用 `$apply-external-jobs` 的 `scripts/external_jobs.py`，不用浏览器加载结果页发现岗位。某个来源需要登录、会员或暂不可用时，继续搜索其他来源，不能让单个来源阻塞整轮。
 3. 汇总前为每个来源标记真实状态：`已搜索`、`无结果`、`需要登录`、`需要会员` 或 `暂不可用`。没有实际尝试的来源只能写 `未搜索`，不得伪装成无结果。
 4. 使用同一份职业档案统一评估全部岗位，按适配度和用户限制排序；泛函岗位不自动优先。同一公司、职位和链接指向同一岗位时去重，同时保留可用的来源链接。
 5. 首轮结果必须先给出四个来源的状态摘要，再在同一张候选清单中展示来源、公司、职位、地点、链接、匹配点、缺口和风险，不能拆成“先泛函、以后再问要不要查外部”。
+6. 平台发生真实失败、恢复或行为变化后，把日期、平台、操作、现象、原因、解决办法、验证结果和复用条件追加到 `Agent平台执行记忆.md`。原因或办法尚未确认时必须标记“未确认／未验证”，不能把猜测沉淀成结论。
 
 ## 选岗后的统一定制流程
 
@@ -105,6 +109,6 @@ description: 整理候选人的真实求职材料，默认同时搜索泛函、B
 
 ## 当前交付边界
 
-- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、投递前淘汰题预检、可审计定制稿、HTML 在侧边栏自动保存修改并直接导出 PDF 的材料门禁、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、可复用申请回答库、轻量面试故事库与模拟复盘、Codex 安装和 WorkBuddy 启动烟测。
+- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、相互独立的用户求职记忆与 Agent 平台执行记忆、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、投递前淘汰题预检、可审计定制稿、HTML 在侧边栏自动保存修改并直接导出 PDF 的材料门禁、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、可复用申请回答库、轻量面试故事库与模拟复盘、Codex 安装和 WorkBuddy 启动烟测。
 - 后续 Issue 覆盖：三名真实候选人验收与 Bonjour 侧边栏投递预演。
 - 在真实验收完成前，不得宣称已完成稳定外部代投。
