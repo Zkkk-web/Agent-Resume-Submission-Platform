@@ -5,7 +5,7 @@
 ### 让你的 Agent 真正了解你，再帮你找工作
 
 上传一份简历，建立可以长期复用的职业档案。<br>
-从泛函与适合你的招聘渠道寻找岗位，针对每个 JD 完善经历、生成专用简历并辅助申请。
+从 63 个持续更新的岗位来源中寻找机会，针对每个 JD 完善经历、生成专用简历并辅助申请。
 
 <p>
   <a href="#快速开始"><strong>开始使用</strong></a>
@@ -135,7 +135,7 @@ cp -R Agent-Resume-Submission-Platform/fanhan-job-agent/. \
 
 ### 一个完整的使用案例
 
-林澄（虚构候选人）上传一份普通简历，只说了一句话。Skill 先从材料中建立长期职业档案，再同时搜索泛函与确认过的外部渠道；选定岗位后，围绕 JD 追问两项关键事实，最后生成可编辑简历并整理申请表。
+林澄（虚构候选人）上传一份普通简历，只说了一句话。Skill 先从材料中建立长期职业档案，再从 63 个岗位来源中选择适合的渠道；选定岗位后，围绕 JD 追问两项关键事实，最后生成可编辑简历并整理申请表。
 
 <img src="docs/assets/readme/case-study.svg" alt="脱敏使用案例：从一份简历到职业档案、多来源找岗、岗位定制和辅助申请" width="100%" />
 
@@ -177,9 +177,9 @@ cp -R Agent-Resume-Submission-Platform/fanhan-job-agent/. \
 |---|---|
 | PDF / DOCX 材料读取与职业档案 | 已支持 |
 | 首次五维职业咨询与长期本地记忆 | 已支持 |
-| 从 63 条来源快照推荐 3–5 个渠道 | 已支持 |
-| 泛函、Bonjour、Watcha、JobRadar 结构化岗位发现 | 已支持；JobRadar 完整内容可能需要会员 |
-| 其他招聘来源 | 用户确认后的定向探索，不承诺稳定适配 |
+| 从 63 个岗位来源中推荐 3–5 个渠道 | 已支持；来源覆盖招聘官网、招聘社区和聚合平台等类型 |
+| 多来源岗位发现与统一整理 | 已支持；岗位数量与访问门槛随来源实时变化 |
+| 新增招聘来源 | 用户确认后的定向探索，不承诺所有网站均可稳定读取 |
 | JD 匹配分析与 1–2 个针对性问题 | 已支持 |
 | 可编辑 HTML 简历与用户下载 PDF | 已支持 |
 | 外部申请表辅助填写 | 已支持辅助流程，效果受网站与浏览器能力影响 |
@@ -250,11 +250,22 @@ cp -R Agent-Resume-Submission-Platform/fanhan-job-agent/. \
 
 | 平台 | 联系方式 |
 |---|---|
-| 微信 | `FH01xy` |
-| 即刻 | [泛函技术招聘](https://m.okjike.com/users/5e6497e7-a69f-422b-af6e-baf0fc07b512) |
+| 即刻 | [打开「泛函技术招聘」](https://okjk.co/47fXxa) |
+| 小红书 | [打开「@泛函」主页](https://xhslink.cn/o/6D14yTWuPLq) |
 | 飞书 | [打开泛函招聘顾问](https://applink.feishu.cn/client/bot/open?appId=cli_aaff15aa85795bee) |
 | 邮箱 | [fanhan@aimanziyi.vip](mailto:fanhan@aimanziyi.vip) |
-| 小红书 / 视频号 / 公众号 | 公开账号确认后补充，避免填写未经核验的入口 |
+
+微信号（点击代码框右上角复制）：
+
+```text
+FH01xy
+```
+
+视频号、公众号名称（点击代码框右上角复制）：
+
+```text
+泛函
+```
 
 <details>
 <summary><strong>仓库结构</strong></summary>

@@ -86,8 +86,8 @@ def scene_two():
 
 
 def scene_three():
-    im, d = base(2, "多来源一起找，不只看一个平台", "泛函与确认过的外部渠道统一筛选、去重和排序。")
-    sources = [("泛函", "12 个岗位"), ("Bonjour", "31 个岗位"), ("Watcha", "18 个岗位")]
+    im, d = base(2, "63 个岗位来源，一起搜索", "从适合你的渠道中统一筛选、去重和排序。")
+    sources = [("招聘官网", "持续更新"), ("招聘社区", "多类岗位"), ("聚合平台", "统一整理")]
     for i, (name, count) in enumerate(sources):
         x = 58 + i * 188
         rounded(d, (x, 205, x + 164, 285), 14, "white", "#111111")
@@ -97,9 +97,9 @@ def scene_three():
     rounded(d, (596, 194, 892, 458), 18, "#F7F7F7", "#DDDDDD")
     text(d, (624, 228), "统一候选清单", 18, bold=True)
     rows = [
-        ("01", "Dealism · AI 产品经理", "92%", "#FFF7BF"),
-        ("02", "Superun · Coding Agent PM", "87%", "white"),
-        ("03", "VIRSE · AI 产品实习生", "81%", "white"),
+        ("01", "AI 产品经理 · 杭州", "高匹配", "#FFF7BF"),
+        ("02", "Agent 产品经理 · 远程", "高匹配", "white"),
+        ("03", "AI 产品实习生 · 深圳", "较匹配", "white"),
     ]
     for i, (n, role, score, bg) in enumerate(rows):
         y = 258 + i * 58
