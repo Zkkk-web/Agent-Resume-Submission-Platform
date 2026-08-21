@@ -139,6 +139,26 @@ cp -R Agent-Resume-Submission-Platform/fanhan-job-agent/. \
 
 <img src="docs/assets/readme/case-study.svg" alt="脱敏使用案例：从一份简历到职业档案、多来源找岗、岗位定制和辅助申请" width="100%" />
 
+#### 演示 1：从一句话启动职业建档
+
+上传简历并说明求职方向后，Skill 会读取材料、初始化本地职业档案，并确认进入岗位推荐前最关键的求职条件。
+
+<img src="docs/assets/readme/demos/01-profile-and-job-search.gif" alt="天才职业顾问读取测试简历、建立职业档案并确认求职条件" width="100%" />
+
+#### 演示 2：围绕 JD 分析并补充经历
+
+选定岗位后，Skill 会比较 JD 与职业档案，说明匹配点、缺口和风险，再追问 1–2 个最值得补充的问题。
+
+<img src="docs/assets/readme/demos/02-jd-resume-customization.gif" alt="天才职业顾问分析测试岗位 JD 并追问候选人的关键经历" width="100%" />
+
+#### 演示 3：生成可编辑的岗位专用简历
+
+候选人补充事实后，Skill 会生成可直接修改的 HTML 简历；候选人检查内容后，可以导出 PDF 并继续申请。
+
+<img src="docs/assets/readme/demos/03-editable-resume-export.gif" alt="天才职业顾问根据 JD 和补充事实生成可编辑 HTML 简历并导出 PDF" width="100%" />
+
+<sub>以上演示使用虚构候选人与脱敏测试材料，不包含真实投递或未经授权的招聘平台信息。</sub>
+
 > 这个案例展示的是“辅助申请”而不是无人值守代投。候选人始终可以检查、修改、暂停，并亲自完成最终提交。
 
 ### 先找岗，暂时不投递
