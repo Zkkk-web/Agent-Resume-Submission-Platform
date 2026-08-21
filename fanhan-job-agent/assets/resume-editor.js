@@ -59,7 +59,7 @@
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['css', 'legacy'] },
         }).from(exportSource).save();
-        setStatus(status, 'PDF 已导出');
+        setStatus(status, 'PDF 已导出，请将下载的 PDF 重新发回当前对话');
         return true;
       } catch (_) {
         setStatus(status, '导出失败，请重新打开页面后再试', true);
@@ -196,7 +196,7 @@
     assert.notEqual(pdfSource, main);
     assert.equal(pdfSource.textContent, '修改后的内容');
     assert.equal(pdfSaved, true);
-    assert.equal(status.textContent, 'PDF 已导出');
+    assert.equal(status.textContent, 'PDF 已导出，请将下载的 PDF 重新发回当前对话');
     assert.equal(button.disabled, false);
     assert.equal(classes.size, 0);
 

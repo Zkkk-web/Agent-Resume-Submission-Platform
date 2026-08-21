@@ -162,7 +162,7 @@ def render_html(title: str, sections: list[dict]) -> str:
 <title>{html.escape(title)}</title>
 <style>
 @page{{size:A4;margin:0}}*{{box-sizing:border-box}}body{{margin:0;background:#eee;color:#222;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}.toolbar{{position:sticky;z-index:2;top:0;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:10px;background:#fff;border-bottom:1px solid #ddd}}.status{{color:#666;font-size:12px}}.status[data-state="error"]{{color:#b42318}}button{{padding:8px 14px;border:0;border-radius:6px;background:#1769e0;color:#fff;cursor:pointer}}button:disabled{{cursor:wait;opacity:.65}}main{{width:210mm;min-height:297mm;margin:16px auto;padding:14mm;background:#fff;box-shadow:0 2px 14px #bbb;outline:none}}section{{break-inside:avoid;page-break-inside:avoid}}h2{{font-size:16px;border-bottom:1px solid #ddd;padding-bottom:4px}}p{{white-space:normal}}body.exporting{{background:#fff}}body.exporting .toolbar{{display:none}}body.exporting main{{margin:0;box-shadow:none}}
-</style></head><body data-fanhan-resume-editor="v2"><div class="toolbar"><span class="status" data-editor-status role="status" aria-live="polite">修改会自动保存</span><button type="button" data-export-pdf>导出 PDF</button></div>
+</style></head><body data-fanhan-resume-editor="v2"><div class="toolbar"><span class="status" data-editor-status role="status" aria-live="polite">修改会自动保存；导出后请将下载的 PDF 重新发回当前对话</span><button type="button" data-export-pdf>导出 PDF</button></div>
 <main contenteditable="true" spellcheck="false" data-resume-content>{''.join(body)}</main>
 <script src=".fanhan-assets/html2pdf.bundle.min.js"></script><script src=".fanhan-assets/resume-editor.js"></script><script>FanhanResumeEditor.install();</script></body></html>
 """
@@ -318,6 +318,7 @@ def self_test() -> None:
         assert sha256(original) == before
         page = output.read_text(encoding="utf-8")
         assert "contenteditable=\"true\"" in page and 'data-fanhan-resume-editor="v2"' in page
+        assert "导出后请将下载的 PDF 重新发回当前对话" in page
         assert "window.print()" not in page and "html2pdf.bundle.min.js" in page
         assert all((output.parent / ".fanhan-assets" / name).is_file() for name in EDITOR_ASSETS)
         assert "<title>张三-Example-AI产品经理-20260818-v1</title>" in page
@@ -386,7 +387,7 @@ def main() -> None:
     print(json.dumps({
         "status": "html_ready",
         "html_path": str(output.resolve()),
-        "next_action": "立即把这个 HTML 作为第一份成稿展示给用户；用户编辑并导出前不得生成或展示 PDF。",
+        "next_action": "立即展示这个 HTML，并只提示用户：检查或修改后点击导出，再把下载的 PDF 重新发回当前对话；收到回传前不得继续。",
         "pdf_ready": False,
     }, ensure_ascii=False, indent=2))
 
