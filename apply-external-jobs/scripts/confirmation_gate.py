@@ -110,13 +110,16 @@ def validate_materials(args, selection):
         raise ValueError("editable_html_missing") from error
     page = html_path.read_text(encoding="utf-8")
     if ('contenteditable="true"' not in page
-            or 'data-fanhan-resume-editor="v2"' not in page
+            or not any(f'data-fanhan-resume-editor="v{version}"' in page for version in (2, 3))
             or "html2pdf.bundle.min.js" not in page
             or "resume-editor.js" not in page
             or "window.print()" in page):
         raise ValueError("editable_html_invalid")
-    if resume_path.suffix.lower() != ".pdf" or not resume_path.read_bytes()[:4] == b"%PDF":
+    pdf = resume_path.read_bytes()
+    if resume_path.suffix.lower() != ".pdf" or not pdf.startswith(b"%PDF-"):
         raise ValueError("tailored_resume_must_be_pdf")
+    if b"jsPDF" not in pdf:
+        raise ValueError("tailored_resume_must_be_editor_export")
     if resume_path.stat().st_mtime_ns < html_path.stat().st_mtime_ns:
         raise ValueError("pdf_must_be_exported_after_html")
     return {
@@ -179,7 +182,7 @@ def self_test():
             "artifact_stem": "张三-Example-Engineer-20260818-v1",
         }, ensure_ascii=False), encoding="utf-8")
         resume = outbox / "张三-Example-Engineer-20260818-v1.pdf"
-        resume.write_bytes(b"%PDF-tailored")
+        resume.write_bytes(b"%PDF-1.4 jsPDF tailored")
         selection_path = local / "selected-external-job.json"
         selection_args = SimpleNamespace(
             company="Example", job_title="Engineer", job_url="https://jobradar.cc/jobs/1",
@@ -203,14 +206,21 @@ def self_test():
             '<script src="html2pdf.bundle.min.js"></script><script src="resume-editor.js"></script></body>',
             encoding="utf-8",
         )
-        resume.write_bytes(b"%PDF-tailored")
+        resume.write_bytes(b"%PDF-1.4 jsPDF tailored")
         value = payload(args)
         first = fingerprint(value)
         assert value["resume_name"] == resume.name
         assert value["html_name"] == editable_html.name
         assert first == fingerprint(dict(value))
-        resume.write_bytes(b"%PDF-tailored-v2")
+        resume.write_bytes(b"%PDF-1.4 jsPDF tailored-v2")
         assert first != fingerprint(payload(args))
+        resume.write_bytes(b"%PDF-1.4 HeadlessChrome Skia/PDF")
+        try:
+            payload(args)
+            raise AssertionError("regenerated PDF must fail")
+        except ValueError as error:
+            assert str(error) == "tailored_resume_must_be_editor_export"
+        resume.write_bytes(b"%PDF-1.4 jsPDF tailored-v2")
         expected = {field: value[field] for field in ("company", "job_title", "job_url", "application_url")}
         assert load_selection(selection_path, expected)["user_confirmed"] is True
         try:

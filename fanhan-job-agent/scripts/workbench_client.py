@@ -70,16 +70,17 @@ def validate_pdf(path: Path) -> tuple[str, int]:
         raise ValueError("缺少同名可编辑 HTML；禁止跳过 HTML 直接上传 PDF")
     page = html_path.read_text(encoding="utf-8")
     if ('contenteditable="true"' not in page
-            or 'data-fanhan-resume-editor="v2"' not in page
+            or not any(f'data-fanhan-resume-editor="v{version}"' in page for version in (2, 3))
             or "html2pdf.bundle.min.js" not in page
             or "resume-editor.js" not in page
             or "window.print()" in page):
         raise ValueError("同名 HTML 不是可编辑、可导出的简历")
     size = path.stat().st_size
-    with path.open("rb") as stream:
-        header = stream.read(5)
-    if not 0 < size <= MAX_PDF_BYTES or header != b"%PDF-":
+    pdf = path.read_bytes()
+    if not 0 < size <= MAX_PDF_BYTES or not pdf.startswith(b"%PDF-"):
         raise ValueError("PDF 必须有效且不超过 10 MB")
+    if b"jsPDF" not in pdf:
+        raise ValueError("PDF 必须由内置 HTML 编辑器导出，禁止重新生成替代文件")
     if path.stat().st_mtime_ns < html_path.stat().st_mtime_ns:
         raise ValueError("PDF 必须由用户在检查 HTML 后导出")
     return sha256(path), size
@@ -356,7 +357,7 @@ def self_test() -> None:
             '<script src="html2pdf.bundle.min.js"></script><script src="resume-editor.js"></script></body>',
             encoding="utf-8",
         )
-        tailored_resume.write_bytes(b"%PDF-tailored")
+        tailored_resume.write_bytes(b"%PDF-1.4 jsPDF tailored")
         job_path = root / "job.json"
         introduction_path = root / "intro.txt"
         state_path = root / ".fanhan-job-agent" / "submission.json"
@@ -393,6 +394,13 @@ def self_test() -> None:
         assert preview["network_writes"] == 0
         assert preview["resume"]["name"] == tailored_resume.name
         assert preview["confirmed_identity_included"] is True
+        tailored_resume.write_bytes(b"%PDF-1.4 HeadlessChrome Skia/PDF")
+        try:
+            prepare(profile_path, job_path, introduction_path, state_path, "https://workbench.example.com")
+            raise AssertionError("重新生成的 PDF 不应进入工作台")
+        except ValueError as error:
+            assert "禁止重新生成" in str(error)
+        tailored_resume.write_bytes(b"%PDF-1.4 jsPDF tailored")
         fake = FakeClient()
         try:
             submit(profile_path, state_path, fake)

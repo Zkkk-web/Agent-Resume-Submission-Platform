@@ -23,6 +23,7 @@ EDITOR_ASSETS = (
     "html2pdf.LICENSE",
     "resume-editor.js",
 )
+MAX_PDF_BYTES = 10 * 1024 * 1024
 
 
 def required_text(value: object, field: str) -> str:
@@ -178,6 +179,44 @@ def install_editor_assets(outbox: Path) -> None:
         shutil.copy2(asset, target / name)
 
 
+def accept_exported_pdf(source_path: Path, html_path: Path) -> dict:
+    source = source_path.expanduser().resolve()
+    editable = html_path.expanduser().resolve()
+    if not source.is_file() or source.suffix.lower() != ".pdf":
+        raise ValueError("请选择从简历编辑器导出的 PDF")
+    data = source.read_bytes()
+    if not 0 < len(data) <= MAX_PDF_BYTES or not data.startswith(b"%PDF-"):
+        raise ValueError("PDF 必须有效且不超过 10 MB")
+    if b"jsPDF" not in data:
+        raise ValueError("PDF 不是内置 HTML 编辑器的原始导出文件；禁止重新生成替代文件")
+    if (not editable.is_file() or editable.suffix.lower() != ".html"
+            or editable.parent.name != "outbox"
+            or editable.parent.parent.name != ".fanhan-job-agent"):
+        raise ValueError("缺少 .fanhan-job-agent/outbox/ 下的同名可编辑 HTML")
+    page = editable.read_text(encoding="utf-8")
+    if ('contenteditable="true"' not in page
+            or not any(f'data-fanhan-resume-editor="v{version}"' in page for version in (2, 3))
+            or "html2pdf.bundle.min.js" not in page
+            or "resume-editor.js" not in page):
+        raise ValueError("HTML 不是内置简历编辑器生成的文件")
+
+    output = editable.with_suffix(".pdf")
+    replaced = output.exists() and output != source
+    if output != source:
+        temporary = output.with_suffix(".pdf.tmp")
+        temporary.write_bytes(data)
+        temporary.chmod(0o600)
+        temporary.replace(output)
+    if sha256(output) != hashlib.sha256(data).hexdigest():
+        raise RuntimeError("接收后的 PDF 与用户上传文件不一致")
+    return {
+        "status": "pdf_accepted",
+        "pdf_path": str(output),
+        "pdf_sha256": sha256(output),
+        "replaced_existing": replaced,
+    }
+
+
 def render(profile_path: Path, proposal_path: Path, output_path: Path) -> None:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
@@ -299,6 +338,24 @@ def self_test() -> None:
             raise AssertionError("不应覆盖已有成稿")
         except FileExistsError:
             pass
+
+        output.write_text(page.replace('data-fanhan-resume-editor="v2"', 'data-fanhan-resume-editor="v3"'), encoding="utf-8")
+        downloaded = root / "Downloads" / output.with_suffix(".pdf").name
+        downloaded.parent.mkdir()
+        downloaded.write_bytes(b"%PDF-1.4\n% jsPDF 4.0.0\nfirst edit")
+        accepted = accept_exported_pdf(downloaded, output)
+        accepted_path = Path(accepted["pdf_path"])
+        assert accepted_path.read_bytes() == downloaded.read_bytes()
+        downloaded.write_bytes(b"%PDF-1.4\n% jsPDF 4.0.0\nsecond edit")
+        accepted = accept_exported_pdf(downloaded, output)
+        assert accepted["replaced_existing"] is True
+        assert accepted_path.read_bytes() == downloaded.read_bytes()
+        downloaded.write_bytes(b"%PDF-1.4\n% HeadlessChrome Skia/PDF\nstale html")
+        try:
+            accept_exported_pdf(downloaded, output)
+            raise AssertionError("禁止用旧 HTML 重新生成 PDF 替换用户导出文件")
+        except ValueError as error:
+            assert "禁止重新生成" in str(error)
     print("material_gate self-test: ok")
 
 
@@ -307,10 +364,16 @@ def main() -> None:
     parser.add_argument("profile", nargs="?", help="职业档案 JSON 路径")
     parser.add_argument("proposal", nargs="?", help="定制提案 JSON 路径")
     parser.add_argument("output", nargs="?", help=".fanhan-job-agent/outbox/ 下的 HTML 输出路径")
+    parser.add_argument("--accept-exported-pdf", nargs=2, metavar=("EXPORTED_PDF", "HTML"))
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         self_test()
+        return
+    if args.accept_exported_pdf:
+        print(json.dumps(accept_exported_pdf(
+            Path(args.accept_exported_pdf[0]), Path(args.accept_exported_pdf[1]),
+        ), ensure_ascii=False, indent=2))
         return
     if not args.profile or not args.proposal or not args.output:
         parser.error("请提供职业档案、定制提案和输出路径")
