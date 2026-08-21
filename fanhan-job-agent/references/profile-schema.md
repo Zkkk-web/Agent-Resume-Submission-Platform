@@ -88,7 +88,7 @@
 }
 ```
 
-`career_document.path` 必须指向 `$职业资产` 根据当前材料生成或更新的非空 `职业经历.md`。`profile.json` 只是机器可读索引，不能代替职业主档。
+`career_document.path` 必须指向本 Skill 根据当前材料生成或更新的非空 `职业经历.md`。`profile.json` 只是机器可读索引，不能代替职业主档。
 
 ## 首次职业咨询
 
