@@ -60,7 +60,7 @@ description: 整理候选人的真实求职材料，先从经过核对的岗位�
 3. 无论职业主档看起来是否完整，都要结合当前 JD 和候选人真实经历追问 1–2 个最可能提高面试机会的问题，一次只问一个。问题必须指向 JD 的具体要求和主档中的具体经历；候选人确认后，把答案同步更新到 `职业经历.md`、`profile.json` 和 `profile-status.json`。
 4. 生成 `.fanhan-job-agent/tailored-proposal.json`，并记录已完成的 `consultation.questions`。每个问题必须通过 `used_in_change_ids` 进入至少一项简历变更；不能只做改写或排序却丢掉本轮确认的内容。`sections` 必须组成一份完整简历，每项调整都关联 JD 依据和候选人事实证据；新增或改变事实必须逐项确认。
 5. 文件名必须是 `姓名-目标公司-目标岗位-YYYYMMDD-vN`，不得继承原简历中的旧目标公司。运行 `material_gate.py`，第一份候选人可见成稿只能生成到 `.fanhan-job-agent/outbox/<文件名>.html`；不得另写 PDF 构建脚本，也不得先生成 Markdown 或 PDF。
-6. HTML 生成后立即把它作为本轮唯一成稿附件展示在 Codex 侧边栏，并提供可点击链接；不能只报告文件路径或先展示 PDF。此时只推进一个动作，明确告诉候选人：“请检查或修改简历，点击右上角导出 PDF，再把下载的 PDF 重新发回当前对话。”用户亲自点击“导出 PDF”后，页面必须冻结点击时的当前内容并再次显示回传提示，不得让候选人误以为导出即完成。收到回传前必须暂停，不能继续申请流程。用户重新发回该 PDF 后，运行 `python3 <skill-root>/scripts/material_gate.py --accept-exported-pdf '<附件路径>' '.fanhan-job-agent/outbox/<同一文件名>.html'`，并只使用脚本返回的路径和哈希。禁止从磁盘 HTML、旧 PDF、Headless Chrome 或其他脚本重新生成替代 PDF；用户尚未完成编辑、导出和回传时，禁止填写 `profile.application_resume.path`。
+6. HTML 生成后立即把它作为本轮唯一成稿附件展示在 Codex 侧边栏，并提供可点击链接；不能只报告文件路径或先展示 PDF。此时只推进一个动作，明确告诉候选人：“请检查或修改简历，点击右上角生成 PDF，再点击下载 PDF，并把文件重新发回当前对话。”页面必须冻结生成时的当前内容；候选人继续修改后，旧下载链接必须失效。收到回传前必须暂停，不能继续申请流程。用户重新发回该 PDF 后，运行 `python3 <skill-root>/scripts/material_gate.py --accept-exported-pdf '<附件路径>' '.fanhan-job-agent/outbox/<同一文件名>.html'`，并只使用脚本返回的路径和哈希。禁止从磁盘 HTML、旧 PDF、Headless Chrome 或其他脚本重新生成替代 PDF；用户尚未完成编辑、生成、下载和回传时，禁止填写 `profile.application_resume.path`。
 7. 用户确认岗位专用 PDF 后，按 [JD 定制材料契约](references/tailored-material-schema.md) 检查视觉版式和 PDF 文本层；无法验证文本层时如实标记，不能宣称已通过 ATS。随后才把接收脚本返回的原文件记录为 `profile.application_resume.path`。没有当前岗位的建议、提案、可编辑 HTML 和用户导出的已检查 PDF 时，禁止进入工作台提交或 `$apply-external-jobs` 的申请步骤。
 
 ## 泛函岗位流程
@@ -118,6 +118,6 @@ description: 整理候选人的真实求职材料，先从经过核对的岗位�
 
 ## 当前交付边界
 
-- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、相互独立的用户求职记忆与 Agent 平台执行记忆、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、投递前淘汰题预检、可审计定制稿、HTML 在侧边栏自动保存修改并直接导出 PDF 的材料门禁、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、可复用申请回答库、轻量面试故事库与模拟复盘、Codex 安装和 WorkBuddy 启动烟测。
+- 已覆盖：Skill 入口、材料采集边界、职业资产强制路由、相互独立的用户求职记忆与 Agent 平台执行记忆、首次五维咨询门禁、选岗后 1–2 问门禁、结构化档案、本地硬限制、投递前淘汰题预检、可审计定制稿、HTML 在侧边栏自动保存修改并通过用户点击链接下载 PDF 的材料门禁、目标文件命名、授权门、授权后工作台一致评分回读、首次内部飞书通知队列、可复用申请回答库、轻量面试故事库与模拟复盘、Codex 安装和 WorkBuddy 启动烟测。
 - 后续 Issue 覆盖：三名真实候选人验收与 Bonjour 侧边栏投递预演。
 - 在真实验收完成前，不得宣称已完成稳定外部代投。

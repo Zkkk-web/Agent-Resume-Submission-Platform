@@ -13,8 +13,9 @@
     const doc = options.document || document;
     const main = doc.querySelector('[data-resume-content]');
     const button = doc.querySelector('[data-export-pdf]');
+    const download = doc.querySelector('[data-download-pdf]');
     const status = doc.querySelector('[data-editor-status]');
-    if (!main || !button) throw new Error('resume editor elements missing');
+    if (!main || !button || !download) throw new Error('resume editor elements missing');
 
     const storage = options.storage === undefined ? localStorageOrNull() : options.storage;
     const storageKey = `fanhan-resume-draft:${doc.title}`;
@@ -33,6 +34,8 @@
       }
     };
     main.addEventListener('input', () => {
+      download.hidden = true;
+      download.removeAttribute('href');
       if (timer !== undefined) cancel(timer);
       timer = schedule(save);
     });
@@ -51,15 +54,18 @@
       doc.body.classList.add('exporting');
       setStatus(status, '正在生成 PDF…');
       try {
-        await pdfFactory().set({
+        const pdfUrl = await pdfFactory().set({
           margin: 0,
           filename: `${safeFilename(doc.title)}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, backgroundColor: '#ffffff', logging: false },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['css', 'legacy'] },
-        }).from(exportSource).save();
-        setStatus(status, 'PDF 已导出，请将下载的 PDF 重新发回当前对话');
+        }).from(exportSource).outputPdf('bloburl');
+        download.href = String(pdfUrl);
+        download.download = `${safeFilename(doc.title)}.pdf`;
+        download.hidden = false;
+        setStatus(status, 'PDF 已生成，请点击“下载 PDF”，再把文件发回当前对话');
         return true;
       } catch (_) {
         setStatus(status, '导出失败，请重新打开页面后再试', true);
@@ -163,6 +169,12 @@
       addEventListener: (name, handler) => { events[name] = handler; },
     };
     const status = { textContent: '', dataset: {} };
+    const download = {
+      hidden: true,
+      href: '',
+      download: '',
+      removeAttribute: (name) => { if (name === 'href') download.href = ''; },
+    };
     const classes = new Set();
     const document = {
       title: '测试简历',
@@ -170,6 +182,7 @@
       querySelector: (selector) => ({
         '[data-resume-content]': main,
         '[data-export-pdf]': button,
+        '[data-download-pdf]': download,
         '[data-editor-status]': status,
       }[selector]),
     };
@@ -179,11 +192,13 @@
       setItem: (key, value) => values.set(key, value),
     };
     let pdfSource;
-    let pdfSaved = false;
     const worker = {
       set: () => worker,
       from: (source) => { pdfSource = source; return worker; },
-      save: async () => { pdfSaved = true; },
+      outputPdf: async (type) => {
+        assert.equal(type, 'bloburl');
+        return 'blob:resume-pdf';
+      },
     };
     const editor = install({
       document, storage, pdfFactory: () => worker,
@@ -195,10 +210,16 @@
     assert.equal(await events.click(), true);
     assert.notEqual(pdfSource, main);
     assert.equal(pdfSource.textContent, '修改后的内容');
-    assert.equal(pdfSaved, true);
-    assert.equal(status.textContent, 'PDF 已导出，请将下载的 PDF 重新发回当前对话');
+    assert.equal(download.href, 'blob:resume-pdf');
+    assert.equal(download.download, '测试简历.pdf');
+    assert.equal(download.hidden, false);
+    assert.equal(status.textContent, 'PDF 已生成，请点击“下载 PDF”，再把文件发回当前对话');
     assert.equal(button.disabled, false);
     assert.equal(classes.size, 0);
+
+    events.input();
+    assert.equal(download.hidden, true);
+    assert.equal(download.href, '');
 
     heading.textContent = '空白';
     paragraph.innerText = '空白';
