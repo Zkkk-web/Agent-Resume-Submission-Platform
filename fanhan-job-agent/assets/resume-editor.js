@@ -38,7 +38,6 @@
     });
 
     const exportPdf = async () => {
-      save();
       const pdfFactory = options.pdfFactory || root.html2pdf;
       if (typeof pdfFactory !== 'function') {
         setStatus(status, 'PDF 组件未加载，请重新打开页面', true);
@@ -46,6 +45,9 @@
       }
       button.disabled = true;
       main.blur && main.blur();
+      await Promise.resolve();
+      save();
+      const exportSource = cloneForExport(main);
       doc.body.classList.add('exporting');
       setStatus(status, '正在生成 PDF…');
       try {
@@ -56,7 +58,7 @@
           html2canvas: { scale: 2, backgroundColor: '#ffffff', logging: false },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['css', 'legacy'] },
-        }).from(main).save();
+        }).from(exportSource).save();
         setStatus(status, 'PDF 已导出');
         return true;
       } catch (_) {
@@ -69,6 +71,14 @@
     };
     button.addEventListener('click', exportPdf);
     return { exportPdf, save, storageKey };
+  }
+
+  function cloneForExport(main) {
+    const clone = main.cloneNode(true);
+    clone.removeAttribute && clone.removeAttribute('contenteditable');
+    Array.from(clone.querySelectorAll ? clone.querySelectorAll('[contenteditable]') : [])
+      .forEach((element) => element.removeAttribute('contenteditable'));
+    return clone;
   }
 
   function snapshot(main) {
@@ -142,6 +152,11 @@
       querySelectorAll: () => [section],
       addEventListener: (name, handler) => { events[name] = handler; },
       blur: () => {},
+      cloneNode: () => ({
+        textContent: paragraph.innerText,
+        removeAttribute: () => {},
+        querySelectorAll: () => [],
+      }),
     };
     const button = {
       disabled: false,
@@ -178,7 +193,8 @@
     events.input();
     assert.equal(JSON.parse(values.get(editor.storageKey)).sections[0].content, '修改后的内容');
     assert.equal(await events.click(), true);
-    assert.equal(pdfSource, main);
+    assert.notEqual(pdfSource, main);
+    assert.equal(pdfSource.textContent, '修改后的内容');
     assert.equal(pdfSaved, true);
     assert.equal(status.textContent, 'PDF 已导出');
     assert.equal(button.disabled, false);
@@ -190,7 +206,7 @@
     assert.equal(paragraph.innerText, '修改后的内容');
   }
 
-  return { install, restore, selfTest, snapshot };
+  return { cloneForExport, install, restore, selfTest, snapshot };
 }));
 
 if (typeof module === 'object' && module.exports && require.main === module) {
