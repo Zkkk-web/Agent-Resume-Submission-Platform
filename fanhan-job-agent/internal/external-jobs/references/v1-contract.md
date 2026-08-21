@@ -2,7 +2,7 @@
 
 ## 范围
 
-- 运行入口：Codex 中的 `$fanhan-job-agent`。
+- 运行入口：Codex 中的 `$genius-career-advisor-fanhan`。
 - 岗位来源：主 Skill 同一轮读取泛函岗位，并根据候选人偏好从内置来源快照推荐 3–5 个外部渠道；用户确认后，本 Skill 才访问这些渠道并与泛函岗位统一排序。Bonjour、Watcha 可作为直接申请候选；JobRadar 只作岗位发现源，跟随其链接进入的不同来源页不构成稳定平台适配。
 - 岗位发现：Bonjour 和 Watcha 优先通过公开页面数据/feed 读取；JobRadar 如实返回登录/会员限制。不得把浏览器超时当作无岗位。
 - 浏览器：只在选岗后使用 Codex 内置浏览器查看详情、登录和申请，不得退回系统默认浏览器。
@@ -18,7 +18,7 @@ Bonjour 的公开职位页会随 HTML 返回岗位数据，V1 直接解析该数
 
 ## 选岗门禁
 
-- 搜索前必须存在 `$职业资产` 生成的职业主档，五维首次职业咨询均已由候选人确认，且 `profile-status.json` 与当前 `profile.json` 哈希一致并标记为 `可匹配`。
+- 搜索前必须存在主 Skill 生成的职业主档，五维首次职业咨询均已由候选人确认，且 `profile-status.json` 与当前 `profile.json` 哈希一致并标记为 `可匹配`。
 - 用户选岗后必须先完成 1–2 个基于当前 JD 的针对性问题并把答案写回长期主档；`material_gate.py` 验证咨询记录确实进入简历变更后，才能生成岗位专用材料。
 - 当前页面、历史标签页或 Agent 自己打开的页面都不是用户意图证据。
 - 用户必须在看过匹配点、缺口和风险后明确选择单个岗位；随后生成 `.fanhan-job-agent/selected-external-job.json`。

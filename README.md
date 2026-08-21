@@ -1,6 +1,6 @@
 <div align="center">
 
-# 天才职业顾问
+# 天才职业顾问 @ 泛函
 
 ### 让你的 Agent 真正了解你，再帮你找工作
 
@@ -15,9 +15,9 @@
   <a href="#真实能力边界"><strong>能力边界</strong></a>
 </p>
 
-<img src="docs/assets/readme/hero-preview.svg" alt="天才职业顾问产品流程示意：从职业档案到岗位专用简历" width="100%" />
+<img src="docs/assets/readme/product-animation/product-demo.gif" alt="天才职业顾问产品动画：一句话完成职业建档、多来源找岗、岗位追问、定制简历和辅助申请" width="100%" />
 
-<sub>当前为黑白视觉预览。正式主演示 GIF 将使用脱敏测试简历录制，不展示真实候选人资料。</sub>
+<sub>10 秒脱敏产品演示。使用虚构候选人与岗位，不展示真实个人资料。</sub>
 
 </div>
 
@@ -91,19 +91,17 @@ Agent 读取完整申请表，能可靠填写的尽量填写；需要你处理�
 
 ### 安装
 
-天才职业顾问依赖独立的「职业资产」Skill。下面两条命令已使用通用 Agent Skills 安装器验证，可以自动识别当前支持的 Agent runtime。
+只安装「天才职业顾问 @ 泛函」一个 Skill。职业建档、来源推荐、岗位搜索、简历定制和申请辅助都已经包含在里面。
 
 ```bash
-npx skills add Ivor-NCUT/career-assets-skill -g -y --copy
 npx skills add Zkkk-web/Agent-Resume-Submission-Platform -g \
-  --skill fanhan-job-agent apply-external-jobs -y --copy
+  --skill genius-career-advisor-fanhan -y --copy
 ```
 
 也可以直接告诉你的 Agent：
 
 ```text
-请帮我安装这两个 Skill：
-https://github.com/Ivor-NCUT/career-assets-skill
+请帮我安装「天才职业顾问 @ 泛函」这个 Skill：
 https://github.com/Zkkk-web/Agent-Resume-Submission-Platform
 ```
 
@@ -111,23 +109,12 @@ https://github.com/Zkkk-web/Agent-Resume-Submission-Platform
 <summary><strong>手动安装到 Codex</strong></summary>
 
 ```bash
-git clone https://github.com/Ivor-NCUT/career-assets-skill.git
 git clone https://github.com/Zkkk-web/Agent-Resume-Submission-Platform.git
 
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills/career-assets-fanhan/assets"
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills/apply-external-jobs"
-
-cp career-assets-skill/SKILL.md \
-  "${CODEX_HOME:-$HOME/.codex}/skills/career-assets-fanhan/SKILL.md"
-cp -R career-assets-skill/assets/. \
-  "${CODEX_HOME:-$HOME/.codex}/skills/career-assets-fanhan/assets/"
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills/genius-career-advisor-fanhan"
 
 cp -R Agent-Resume-Submission-Platform/fanhan-job-agent/. \
-  "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent/"
-
-cp -R Agent-Resume-Submission-Platform/apply-external-jobs/. \
-  "${CODEX_HOME:-$HOME/.codex}/skills/apply-external-jobs/"
+  "${CODEX_HOME:-$HOME/.codex}/skills/genius-career-advisor-fanhan/"
 ```
 
 </details>
@@ -137,7 +124,7 @@ cp -R Agent-Resume-Submission-Platform/apply-external-jobs/. \
 上传简历，然后只需要说：
 
 ```text
-使用 $fanhan-job-agent 帮我找适合的工作，这是我的简历。
+使用 $genius-career-advisor-fanhan 帮我找适合的工作，这是我的简历。
 ```
 
 剩下的建档、咨询、来源推荐和岗位整理，由 Skill 自己推进。普通用户不需要记一段很长的测试 Prompt。
@@ -145,6 +132,14 @@ cp -R Agent-Resume-Submission-Platform/apply-external-jobs/. \
 ---
 
 ## 常用场景
+
+### 一个完整的使用案例
+
+林澄（虚构候选人）上传一份普通简历，只说了一句话。Skill 先从材料中建立长期职业档案，再同时搜索泛函与确认过的外部渠道；选定岗位后，围绕 JD 追问两项关键事实，最后生成可编辑简历并整理申请表。
+
+<img src="docs/assets/readme/case-study.svg" alt="脱敏使用案例：从一份简历到职业档案、多来源找岗、岗位定制和辅助申请" width="100%" />
+
+> 这个案例展示的是“辅助申请”而不是无人值守代投。候选人始终可以检查、修改、暂停，并亲自完成最终提交。
 
 ### 先找岗，暂时不投递
 
@@ -239,25 +234,34 @@ cp -R Agent-Resume-Submission-Platform/apply-external-jobs/. \
 </tr>
 </table>
 
+<img src="docs/assets/readme/business-cta.svg" alt="候选人免费使用天才职业顾问，企业联系泛函招聘团队" width="100%" />
+
 <div align="center">
-
-**候选人免费使用 Skill　·　企业通过招聘服务与泛函合作**
-
-<a href="#快速开始"><strong>我是候选人｜开始使用</strong></a>
-&nbsp;&nbsp;·&nbsp;&nbsp;
-<strong>我是企业｜联系泛函招聘团队</strong>
-
+  <a href="#快速开始"><strong>我是候选人｜免费开始使用</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://applink.feishu.cn/client/bot/open?appId=cli_aaff15aa85795bee"><strong>我是企业｜在飞书联系泛函招聘团队</strong></a>
 </div>
 
 ---
 
 ## 开发者说明
 
+<img src="docs/assets/readme/contact-card.svg" alt="泛函招聘团队在微信、即刻、小红书、视频号和公众号的联系方式" width="100%" />
+
+| 平台 | 联系方式 |
+|---|---|
+| 微信 | `FH01xy` |
+| 即刻 | [泛函技术招聘](https://m.okjike.com/users/5e6497e7-a69f-422b-af6e-baf0fc07b512) |
+| 飞书 | [打开泛函招聘顾问](https://applink.feishu.cn/client/bot/open?appId=cli_aaff15aa85795bee) |
+| 邮箱 | [fanhan@aimanziyi.vip](mailto:fanhan@aimanziyi.vip) |
+| 小红书 / 视频号 / 公众号 | 公开账号确认后补充，避免填写未经核验的入口 |
+
 <details>
 <summary><strong>仓库结构</strong></summary>
 
-- `fanhan-job-agent`：面向用户的唯一产品入口，技术标识为 `$fanhan-job-agent`。
-- `apply-external-jobs`：来源筛选、结构化岗位发现、选岗门禁与申请辅助。
+- `fanhan-job-agent`：面向用户的唯一产品入口，技术标识为 `$genius-career-advisor-fanhan`。
+- `fanhan-job-agent/internal/external-jobs`：内置来源筛选、结构化岗位发现、选岗门禁与申请辅助；无需单独安装。
+- `apply-external-jobs`：旧 Prompt 的兼容转发入口。
 - `apply-jobradar`：旧 Prompt 的兼容入口，不维护独立投递逻辑。
 - `source-feedback-relay`：候选人授权后，将新的招聘网站建议发送到独立飞书群。
 - `docs`：外部网站、第三方项目与工作台接入审计。
@@ -268,12 +272,12 @@ cp -R Agent-Resume-Submission-Platform/apply-external-jobs/. \
 <summary><strong>本地验证</strong></summary>
 
 ```bash
-python3 apply-external-jobs/scripts/application_log.py self-test
-python3 apply-external-jobs/scripts/confirmation_gate.py self-test
-python3 apply-external-jobs/scripts/external_jobs.py --self-test
-python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
-python3 apply-external-jobs/scripts/source_catalog.py --self-test
-python3 apply-external-jobs/scripts/source_feedback.py self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/application_log.py self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/confirmation_gate.py self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/external_jobs.py --self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/watcha_jobs.py --self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/source_catalog.py --self-test
+python3 fanhan-job-agent/internal/external-jobs/scripts/source_feedback.py self-test
 python3 source-feedback-relay/server.py --self-test
 python3 fanhan-job-agent/scripts/profile_status.py --self-test
 python3 fanhan-job-agent/scripts/match_guard.py --self-test
