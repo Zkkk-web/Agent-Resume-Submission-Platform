@@ -10,8 +10,8 @@
     <rect x="54" y="190" width="236" height="166" rx="16" fill="#1d1d1d" stroke="#555555"/>
     <text x="78" y="226" fill="#FFF3A6" font-size="12" font-weight="700">01 · 建档</text>
     <text x="78" y="263" fill="#ffffff" font-size="18" font-weight="650">挖出可验证成果</text>
-    <text x="78" y="294" fill="#bbbbbb" font-size="14">自动解决率 34% → 63%</text>
-    <text x="78" y="320" fill="#bbbbbb" font-size="14">Issue → PR → CI 验收闭环</text>
+    <text x="78" y="294" fill="#bbbbbb" font-size="14">建立评测集与验收指标</text>
+    <text x="78" y="320" fill="#bbbbbb" font-size="14">推动跨团队上线与复盘</text>
 
     <rect x="310" y="190" width="236" height="166" rx="16" fill="#1d1d1d" stroke="#555555"/>
     <text x="334" y="226" fill="#FFF3A6" font-size="12" font-weight="700">02 · 找岗</text>
