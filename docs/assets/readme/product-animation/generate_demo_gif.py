@@ -89,13 +89,13 @@ def scene_three():
     im, d = base(2, "63 个岗位来源，一起搜索", "从适合你的渠道中统一筛选、去重和排序。")
     sources = [("招聘官网", "持续更新"), ("招聘社区", "多类岗位"), ("聚合平台", "统一整理")]
     for i, (name, count) in enumerate(sources):
-        x = 58 + i * 188
-        rounded(d, (x, 205, x + 164, 285), 14, "white", "#111111")
+        x = 58 + i * 174
+        rounded(d, (x, 205, x + 150, 285), 14, "white", "#111111")
         text(d, (x + 20, 232), name, 15, bold=True)
         text(d, (x + 20, 261), count, 12, fill="#777777")
-        d.line((x + 82, 286, 596, 335), fill="#BBBBBB", width=2)
-    rounded(d, (596, 194, 892, 458), 18, "#F7F7F7", "#DDDDDD")
-    text(d, (624, 228), "统一候选清单", 18, bold=True)
+        d.line((x + 75, 286, 610, 335), fill="#BBBBBB", width=2)
+    rounded(d, (610, 194, 892, 458), 18, "#F7F7F7", "#DDDDDD")
+    text(d, (634, 228), "统一候选清单", 18, bold=True)
     rows = [
         ("01", "AI 产品经理 · 杭州", "高匹配", "#FFF7BF"),
         ("02", "Agent 产品经理 · 远程", "高匹配", "white"),
@@ -103,10 +103,10 @@ def scene_three():
     ]
     for i, (n, role, score, bg) in enumerate(rows):
         y = 258 + i * 58
-        rounded(d, (618, y, 870, y + 44), 10, bg, "#D8D8D8", 1)
-        text(d, (636, y + 22), n, 11, fill="#777777", bold=True, anchor="lm")
-        text(d, (670, y + 22), role, 12, bold=True, anchor="lm")
-        text(d, (852, y + 22), score, 11, bold=True, anchor="rm")
+        rounded(d, (628, y, 874, y + 44), 10, bg, "#D8D8D8", 1)
+        text(d, (644, y + 22), n, 11, fill="#777777", bold=True, anchor="lm")
+        text(d, (674, y + 22), role, 12, bold=True, anchor="lm")
+        text(d, (858, y + 22), score, 11, bold=True, anchor="rm")
     for y, label in [(360, "推荐范围先由你确认"), (402, "会员、登录和暂不可用会如实标记"), (444, "同一岗位自动去重")]:
         check(d, 58, y - 10)
         text(d, (92, y), label, 14, bold=True, anchor="lm")
