@@ -1,72 +1,314 @@
-# Agent Resume Submission Platform — V1
+<div align="center">
 
-V1 对用户只有一个入口，内部依赖职业资产与外部网站安全骨架：
+# 天才职业顾问 @ 泛函
 
-- `天才职业顾问`（技术标识 `fanhan-job-agent`）：调用 `$职业资产` 建立长期档案，先从 63 条已核对来源快照中筛选 3–5 个渠道，经用户确认后再搜索泛函与外部来源；选岗后生成岗位专用简历，并在候选人明确授权后辅助申请。
-- `apply-external-jobs`：处理来源筛选、Bonjour/Watcha/JobRadar 的结构化岗位发现、其他已确认网站的定向探索、选岗门禁、表单辅助与最小本地记录。
-- `apply-jobradar`：仅兼容旧 Prompt，并转交上面两个 Skill，不维护独立逻辑。
+### 让你的 Agent 真正了解你，再帮你找工作
 
-V1 的外部网站模式是“辅助投递”：Agent 接受 PDF 或 DOCX，先建立职业档案；用户选岗后获得针对性建议和岗位专用简历。针对性提问结束后，第一份候选人可见成稿必须是绑定候选人、目标公司和岗位的可编辑 HTML，并立即在 Codex 侧边栏展示；页面在本地自动保存文字修改，并读取当前页面直接导出同名 A4 PDF，不依赖系统打印窗口。用户检查、修改并亲自导出后才能进入申请。Agent 先扫描完整申请表，可靠字段预填后重新读取复核；只要存在人工步骤，就一次性整理所有字段的值和状态供用户复制或上传。外部申请提交、失败或放弃后先取得泛函入库授权，核验工作台与飞书通知，再只提示可选面试辅助。托管代投不属于三天版。
+上传一份简历，建立可以长期复用的职业档案。<br>
+从 63 个持续更新的岗位来源中寻找机会，针对每个 JD 完善经历、生成专用简历并辅助申请。
 
-申请表出现开放题时，主 Skill 会优先查找本地已确认回答，展示原公司和岗位后由候选人决定沿用、改写或重答；答案只保存在 `.fanhan-job-agent/candidate-memory.json`，不进入外部投递日志或工作台。候选人进入面试阶段后，可复用同一职业资产建立故事库、逐题模拟和复盘记录。当前不接入独立 Chrome、Playwright 或自动提交。
+<p>
+  <a href="#快速开始"><strong>开始使用</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#它是怎么工作的"><strong>查看流程</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#真实能力边界"><strong>能力边界</strong></a>
+</p>
 
-每个候选人目录另有两个互不混写的 Markdown：`用户求职记忆.md` 保存候选人确认的求职偏好，`Agent平台执行记忆.md` 保存招聘网站故障、解决办法和复用条件。`职业经历.md` 仍是职业事实主档，三者用途不同。
+<img src="docs/assets/readme/product-animation/product-demo.gif" alt="天才职业顾问产品动画：一句话完成职业建档、多来源找岗、岗位追问、定制简历和辅助申请" width="100%" />
 
-默认找岗不区分“先泛函、后外部”：同一轮读取泛函岗位，并从内置来源快照中推荐 3–5 个外部渠道。用户确认后才访问这些网站，再统一展示和排序；这避免一次打开几十个页面造成 Token 浪费。来源需要登录、会员或暂不可用时明确标记并继续其他已确认来源。
+<sub>10 秒脱敏产品演示。使用虚构候选人与岗位，不展示真实个人资料。</sub>
 
-来源快照位于 `apply-external-jobs/data/job-source-catalog.json`，由泛函内部多维表格导出；公开 Skill 运行时不读取私有飞书表格。用户分享快照之外的网站时，Skill 只整理网站信息并再次询问是否愿意交给泛函，不发送候选人材料。独立的 `source-feedback-relay` 默认将授权后的建议直接推送到“候选人网站建议”飞书群，不经过工作台或数据库；发送失败时不能宣称已经进入飞书。
+</div>
 
-当前打开的招聘页面不代表用户选择。V1 在发送个人数据前必须先展示匹配点、缺口和风险，由用户明确选择单个岗位，并生成与公司、职位和链接绑定的本地选岗记录；记录缺失或不一致时流程停止。
+---
 
-Issue #25 的只读探测已把 Bonjour 选为首个直接投递候选，Watcha 为第二顺位，JobRadar 只作岗位发现源。详细证据见 [外部招聘网站可行性探测](docs/external-site-feasibility-issue-08.md)。在 Codex 侧边栏完成真实预演前，不增加站点适配器抽象。
+## 它不只是帮你改简历
 
-第三方项目只借鉴设计，不复制代码；来源、许可证和取舍见 [第三方求职 Skill 借鉴记录](docs/third-party-feature-audit.md)。
+普通 AI 往往只看当前简历，改几句话，然后忘记你是谁。
 
-外部岗位发现统一运行 `apply-external-jobs/scripts/external_jobs.py`：Bonjour 读取公开职位页随页面返回的岗位数据，Watcha 读取其公开 feed，JobRadar 准确返回免费预览/会员限制。浏览器只负责选岗后的详情、登录和申请，不再用页面加载是否超时判断整个平台可用性。
+天才职业顾问会先理解你的真实经历，把一次沟通沉淀成长期职业档案，再把这些信息用于找岗、选岗、定制简历、辅助申请和后续面试准备。
 
-V1 不包含候选人平台账号、积分付费、三个外部网站稳定适配或验证码绕过。WorkBuddy 当前只验收主 Skill 可安装、触发并进入材料采集。
+<table>
+<tr>
+<td width="33%" valign="top">
 
-`$职业资产` 是必需依赖，当前来源为 [Ivor-NCUT/career-assets-skill](https://github.com/Ivor-NCUT/career-assets-skill)。本仓库不复制该独立仓库；测试环境必须先确认 Codex 能发现名为“职业资产”的 Skill，否则主流程应停止并报告依赖缺失。
+### 01　先了解你
 
-## 安装
+读取 PDF 或 DOCX，通过简短咨询挖掘成果、个人贡献、关键判断和可验证结果。
+
+</td>
+<td width="33%" valign="top">
+
+### 02　再帮你选
+
+根据求职方向推荐 3–5 个合适渠道，再统一整理泛函与确认过的外部岗位。
+
+</td>
+<td width="33%" valign="top">
+
+### 03　最后帮你申请
+
+结合具体 JD 补充经历、生成可编辑简历，并把无法可靠填写的申请字段一次整理清楚。
+
+</td>
+</tr>
+</table>
+
+---
+
+## 它是怎么工作的
+
+<img src="docs/assets/readme/workflow.svg" alt="上传简历、职业咨询、多来源找岗、选择岗位、定制简历、辅助申请的六步流程" width="100%" />
+
+### 1. 上传原始材料
+
+把简历发给 Agent。作品集、GitHub 和个人网站都是可选材料，不会因为缺少链接阻止建档。
+
+### 2. 建立长期职业档案
+
+Agent 先读材料，再围绕最有潜力的一段经历逐步追问。每次只问一个问题，不让你重新填写一张长表。
+
+### 3. 选择合适的岗位来源
+
+Skill 内置经过整理的岗位来源快照，会根据方向、城市和办公方式推荐 3–5 个渠道。你确认后才开始访问，不会一次打开几十个网站浪费 Token。
+
+### 4. 统一搜索和判断岗位
+
+同一轮整理泛函与已确认外部来源，展示来源状态、匹配点、缺口和风险。泛函岗位不会被静默置顶，重复岗位会被合并。
+
+### 5. 生成岗位专用简历
+
+你选定岗位后，Agent 会针对 JD 再问 1–2 个最值得补充的问题，生成可以直接修改的 HTML 简历。你检查并下载 PDF，再把文件发回当前对话。
+
+### 6. 辅助申请，由你提交
+
+Agent 读取完整申请表，能可靠填写的尽量填写；需要你处理的字段、答案和文件会一次性整理。登录、验证码、文件选择和最终提交仍由你本人完成。
+
+---
+
+## 快速开始
+
+### 安装
+
+只需安装本仓库一次。安装器会同时安装四个配套 Skill；普通用户日常只需要调用「天才职业顾问 @ 泛函」主入口。
 
 ```bash
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R apply-external-jobs "${CODEX_HOME:-$HOME/.codex}/skills/apply-external-jobs"
-cp -R fanhan-job-agent "${CODEX_HOME:-$HOME/.codex}/skills/fanhan-job-agent"
+npx skills add https://github.com/Ivor-NCUT/genius-career-advisor-skill \
+  --skill '*' -g -a codex -y
 ```
 
-安装后在界面选择“天才职业顾问”，或在 Codex 中说：
+也可以直接告诉你的 Agent：
+
+```text
+请把这个 GitHub 仓库中的全部 Skill 安装到当前 Agent：
+https://github.com/Ivor-NCUT/genius-career-advisor-skill
+```
+
+<details>
+<summary><strong>手动安装到 Codex</strong></summary>
+
+```bash
+git clone https://github.com/Ivor-NCUT/genius-career-advisor-skill.git
+
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+
+cp -R genius-career-advisor-skill/fanhan-job-agent \
+  genius-career-advisor-skill/career-assets \
+  genius-career-advisor-skill/apply-external-jobs \
+  genius-career-advisor-skill/apply-jobradar \
+  "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+</details>
+
+### 第一句 Prompt
+
+上传简历，然后只需要说：
 
 ```text
 使用 $fanhan-job-agent 帮我找适合的工作，这是我的简历。
 ```
 
-职业主档、机器可读档案、岗位建议、选岗记录和投递日志都写入 `.fanhan-job-agent/`；待投递 HTML/PDF 只写入 `.fanhan-job-agent/outbox/`。日志不得保存简历正文、联系方式、凭据或表单答案。
+剩下的建档、咨询、来源推荐和岗位整理，由 Skill 自己推进。普通用户不需要记一段很长的测试 Prompt。
 
-## 本地验证
+---
 
-```bash
-python3 apply-external-jobs/scripts/application_log.py self-test
-python3 apply-external-jobs/scripts/confirmation_gate.py self-test
-python3 apply-external-jobs/scripts/external_jobs.py --self-test
-python3 apply-external-jobs/scripts/watcha_jobs.py --self-test
-python3 apply-external-jobs/scripts/source_catalog.py --self-test
-python3 apply-external-jobs/scripts/source_feedback.py self-test
-python3 source-feedback-relay/server.py --self-test
-python3 fanhan-job-agent/scripts/profile_status.py --self-test
-python3 fanhan-job-agent/scripts/match_guard.py --self-test
-python3 fanhan-job-agent/scripts/material_gate.py --self-test
-node fanhan-job-agent/assets/resume-editor.js --self-test
-python3 fanhan-job-agent/scripts/candidate_memory.py self-test
-python3 fanhan-job-agent/scripts/local_memory.py --self-test
-python3 fanhan-job-agent/scripts/workbench_client.py self-test
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" fanhan-job-agent
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" apply-external-jobs
+## 常用场景
+
+### 一个完整的使用案例
+
+林澄（虚构候选人）上传一份普通简历，只说了一句话。Skill 先从材料中建立长期职业档案，再从 63 个岗位来源中选择适合的渠道；选定岗位后，围绕 JD 追问两项关键事实，最后生成可编辑简历并整理申请表。
+
+<img src="docs/assets/readme/case-study.svg" alt="脱敏使用案例：从一份简历到职业档案、多来源找岗、岗位定制和辅助申请" width="100%" />
+
+#### 演示 1：从一句话启动职业建档
+
+上传简历并说明求职方向后，Skill 会读取材料、初始化本地职业档案，并确认进入岗位推荐前最关键的求职条件。
+
+<img src="docs/assets/readme/demos/01-profile-and-job-search.gif" alt="天才职业顾问读取测试简历、建立职业档案并确认求职条件" width="100%" />
+
+#### 演示 2：围绕 JD 分析并补充经历
+
+选定岗位后，Skill 会比较 JD 与职业档案，说明匹配点、缺口和风险，再追问 1–2 个最值得补充的问题。
+
+<img src="docs/assets/readme/demos/02-jd-resume-customization.gif" alt="天才职业顾问分析测试岗位 JD 并追问候选人的关键经历" width="100%" />
+
+#### 演示 3：生成可编辑的岗位专用简历
+
+候选人补充事实后，Skill 会生成可直接修改的 HTML 简历；候选人检查内容后，可以导出 PDF 并继续申请。
+
+<img src="docs/assets/readme/demos/03-editable-resume-export.gif" alt="天才职业顾问根据 JD 和补充事实生成可编辑 HTML 简历并导出 PDF" width="100%" />
+
+<sub>以上演示使用虚构候选人与脱敏测试材料，不包含真实投递或未经授权的招聘平台信息。</sub>
+
+> 这个案例展示的是“辅助申请”而不是无人值守代投。候选人始终可以检查、修改、暂停，并亲自完成最终提交。
+
+### 先找岗，暂时不投递
+
+```text
+请先建立我的职业档案，再同时搜索泛函和适合我的外部招聘渠道。
+先展示来源状态和岗位结果，暂时不要投递。
 ```
 
-真实验收还需要测试者提供可用于申请的真实材料，并在泛函入库、外部个人数据发送、登录/验证码和最终提交时亲自确认。
+### 针对一个岗位完善简历
 
-## 工作台接入
+```text
+我想申请这个岗位。请先分析匹配点、缺口和风险，
+再问我 1–2 个最值得补充的问题，最后生成一份可编辑的岗位专用简历。
+```
 
-泛函主链路的接口、评分和缺口以 [工作台接入审计](docs/workbench-integration-audit.md) 为准。当前外部网站安全骨架可以继续复用；候选人自助入库、本人匹配结果回读和首次内部飞书通知已经通过工作台公开接口与通知队列完成，开源 Skill 不携带服务密钥。
+### 准备申请表
+
+```text
+我确认申请这个岗位。请读取完整申请表，能可靠填写的帮我填写；
+不能填写的字段一次性整理给我。最终提交由我点击。
+```
+
+### 进入面试准备
+
+```text
+我已经进入这个岗位的面试阶段，请根据我的职业档案和 JD 帮我模拟面试。
+一次问一个问题。
+```
+
+---
+
+## 真实能力边界
+
+| 能力 | 当前状态 |
+|---|---|
+| PDF / DOCX 材料读取与职业档案 | 已支持 |
+| 首次五维职业咨询与长期本地记忆 | 已支持 |
+| 从 63 个岗位来源中推荐 3–5 个渠道 | 已支持；来源覆盖招聘官网、招聘社区和聚合平台等类型 |
+| 多来源岗位发现与统一整理 | 已支持；岗位数量与访问门槛随来源实时变化 |
+| 新增招聘来源 | 用户确认后的定向探索，不承诺所有网站均可稳定读取 |
+| JD 匹配分析与 1–2 个针对性问题 | 已支持 |
+| 可编辑 HTML 简历与用户下载 PDF | 已支持 |
+| 外部申请表辅助填写 | 已支持辅助流程，效果受网站与浏览器能力影响 |
+| 最终提交 | 必须由用户本人确认和点击 |
+| 泛函档案提交与内部招聘通知 | 仅在候选人明确授权后执行 |
+| WorkBuddy | 已完成安装、触发与材料采集烟测；完整外部申请仍以 Codex 为主 |
+
+> 这不是一个“自动海投 63 个网站”的工具。它提供的是可检查、可暂停、可由用户接管的求职工作流。
+
+---
+
+## 隐私与控制
+
+- 原始材料默认只在当前本地环境处理。
+- 未经明确授权，不向泛函或招聘网站发送简历、联系方式和作品集。
+- 不保存招聘网站密码、Cookie、验证码或登录状态。
+- 当前打开的网页不代表用户选择了这个岗位。
+- 发送个人信息前必须说明接收方和字段范围。
+- 最终提交按钮始终由用户本人点击。
+
+详细规则见 [隐私与本地存储](fanhan-job-agent/references/privacy-and-storage.md)。
+
+---
+
+## Skill 之外，泛函还能继续帮你
+
+天才职业顾问可以独立、免费地运行在你自己的 Agent 中。是否把职业档案交给泛函，是另一个需要单独确认的选择。
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 对候选人
+
+- 招聘团队人工审核职业档案；
+- 匹配泛函自己的岗位和合作企业岗位；
+- 出现合适机会时主动联系；
+- 为优秀候选人提供企业推荐或内推；
+- 进入面试后继续复用同一份职业档案准备表达。
+
+</td>
+<td width="50%" valign="top">
+
+### 对企业
+
+- 发布 AI、Agent、产品与技术岗位；
+- 获取经过职业咨询和材料核验的候选人；
+- 由泛函完成初步筛选、推荐和后续招聘协作；
+- 按现有企业招聘与猎头服务方式合作。
+
+</td>
+</tr>
+</table>
+
+<img src="docs/assets/readme/business-cta.svg" alt="候选人免费使用天才职业顾问，企业联系泛函招聘团队" width="100%" />
+
+<div align="center">
+  <a href="#快速开始"><strong>我是候选人｜免费开始使用</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://applink.feishu.cn/client/bot/open?appId=cli_aaff15aa85795bee"><strong>我是企业｜在飞书联系泛函招聘团队</strong></a>
+</div>
+
+---
+
+## 开发者说明
+
+<img src="docs/assets/readme/contact-card.svg" alt="泛函招聘团队在微信、即刻、小红书、视频号和公众号的联系方式" width="100%" />
+
+| 平台 | 联系方式 |
+|---|---|
+| 即刻 | [打开「@泛函」主页](https://okjk.co/47fXxa) |
+| 小红书 | [打开「@泛函」主页](https://xhslink.cn/o/6D14yTWuPLq) |
+| 飞书 | [打开泛函招聘顾问](https://applink.feishu.cn/client/bot/open?appId=cli_aaff15aa85795bee) |
+| 邮箱 | [fanhan@aimanziyi.vip](mailto:fanhan@aimanziyi.vip) |
+
+微信号（点击代码框右上角复制）：
+
+```text
+FH01xy
+```
+
+视频号、公众号名称（点击代码框右上角复制）：
+
+```text
+泛函
+```
+
+<details>
+<summary><strong>仓库结构</strong></summary>
+
+- `fanhan-job-agent`：面向用户的唯一产品入口，技术标识为 `$fanhan-job-agent`。
+- `career-assets`：读取材料、深挖经历并维护长期职业主档，对外显示为「职业资产」。
+- `apply-external-jobs`：来源筛选、结构化岗位发现、选岗门禁与申请辅助，由主入口按流程调用。
+- `apply-jobradar`：旧 Prompt 的兼容入口，不维护独立投递逻辑。
+- `docs`：外部网站、第三方项目与工作台接入审计。
+
+</details>
+
+---
+
+<div align="center">
+
+### 找工作，不应该从每次重新介绍自己开始
+
+一次建立职业档案，持续用于找岗、申请和面试准备。
+
+Maintained by [Ivor-NCUT](https://github.com/Ivor-NCUT) and [Zkkk-web](https://github.com/Zkkk-web)
+
+</div>
