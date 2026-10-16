@@ -14,8 +14,8 @@ from urllib.parse import urlparse
 
 DEFAULT_STATE = Path(".fanhan-job-agent/source-suggestion.json")
 DEFAULT_QUEUE = Path(".fanhan-job-agent/source-suggestions.jsonl")
-# ponytail: Zeabur HTTPS is provisioning; switch back to the generated domain once its certificate is active.
-DEFAULT_ENDPOINT = "http://43.153.211.45:31807/source-feedback"
+# Recruiting source feedback is hosted on InstaCloud; FANHAN_SOURCE_FEEDBACK_URL remains an override.
+DEFAULT_ENDPOINT = "https://prod-main-feedback-preview-cfb4ab-2026425dc3m.compute.instacloud-edge.com/source-feedback"
 
 
 def valid_url(value: str) -> str:
